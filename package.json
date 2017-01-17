@@ -1,5 +1,5 @@
 {
-  "name": "react-sortable-tree",
+  "name": "gino-react-sortable-tree",
   "version": "0.1.12",
   "description": "Drag-and-drop sortable representation of hierarchical data",
   "scripts": {
