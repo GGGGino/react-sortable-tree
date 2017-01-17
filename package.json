@@ -11,13 +11,11 @@
     "clean:umd": "rimraf dist/umd",
     "start": "cross-env NODE_ENV=development webpack-dev-server --hot --inline --config webpack.config.dev.babel.js",
     "lint": "eslint src",
-    "preinstall": "npm run build:umd",
     "prepublish": "npm run lint && npm run test && npm run build:umd",
     "test": "cross-env NODE_ENV=test karma start --single-run",
     "test:watch": "cross-env NODE_ENV=test karma start",
     "deploy": "npm run build && gh-pages -d build"
   },
-  "private": true,
   "main": "dist/umd/react-sortable-tree.js",
   "files": [
     "dist"
