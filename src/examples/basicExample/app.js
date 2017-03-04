@@ -7,6 +7,7 @@ import '../shared/favicon/favicon-16x16.png';
 import '../shared/favicon/favicon-32x32.png';
 import '../shared/favicon/favicon.ico';
 import '../shared/favicon/safari-pinned-tab.svg';
+import {addNodeUnderParent, getNodeAtPath} from "../../utils/tree-data-utils";
 
 const maxDepth = 5;
 
@@ -22,16 +23,20 @@ class App extends Component {
             searchFoundCount: null,
             treeData: [
                 {
-                    title: '`title`',
-                    subtitle: '`subtitle`',
+                    id: 1,
+                    title: 'Pistoia',
+                    subtitle: 'Piccolo Comune',
+                    complete: false,
                     expanded: true,
                     children: [
                         {
-                            title: 'Child Node',
-                            subtitle: 'Defined in `children` array belonging to parent',
+                            id: 11,
+                            title: 'Chiesina Uzzanese',
+                            subtitle: 'Shit',
                         },
                         {
-                            title: 'Nested structure is rendered virtually',
+                            id: 12,
+                            title: 'Ponte Buggianese',
                             subtitle: (
                                 <span>
                                     The tree uses&nbsp;
@@ -45,41 +50,60 @@ class App extends Component {
                     ],
                 },
                 {
+                    id: 2,
                     expanded: true,
-                    title: 'Any node can be the parent or child of any other node',
+                    title: 'Prato',
                     children: [
                         {
+                            id: 21,
                             expanded: true,
-                            title: 'Chicken',
+                            title: 'Dupalle',
                             children: [
-                                { title: 'Egg' },
+                                {
+                                    id: 211,
+                                    title: 'Egg',
+                                    complete: false,
+                                    expanded: true
+                                },
                             ],
                         },
                     ],
                 },
                 {
+                    id: 3,
                     title: 'Button(s) can be added to the node',
                     subtitle: 'Node info is passed when generating so you can use it in your onClick handler',
                 },
                 {
+                    id: 4,
                     title: 'Show node children by setting `expanded`',
                     subtitle: ({ node }) => `expanded: ${node.expanded ? 'true' : 'false'}`,
                     children: [
                         {
+                            id: 41,
                             title: 'Bruce',
                             subtitle: ({ node }) => `expanded: ${node.expanded ? 'true' : 'false'}`,
                             children: [
-                                { title: 'Bruce Jr.' },
-                                { title: 'Brucette' },
+                                {
+                                    id: 411,
+                                    title: 'Bruce Jr.'
+                                },
+                                {
+                                    id: 412,
+                                    title: 'Brucette'
+                                },
                             ],
                         },
                     ],
                 },
                 {
+                    id: 5,
                     title: 'Advanced',
                     subtitle: 'Settings, behavior, etc.',
+                    expanded: false,
                     children: [
                         {
+                            id: 51,
                             title: (
                                 <div>
                                     <div
@@ -99,20 +123,27 @@ class App extends Component {
                             ),
                         },
                         {
+                            id: 52,
                             expanded: true,
                             title: 'Limit nesting with `maxDepth`',
                             subtitle: `It's set to ${maxDepth} for this example`,
                             children: [
                                 {
+                                    id: 521,
                                     expanded: true,
                                     title: renderDepthTitle,
                                     children: [
                                         {
+                                            id: 5211,
                                             expanded: true,
                                             title: renderDepthTitle,
                                             children: [
-                                                { title: renderDepthTitle },
                                                 {
+                                                    id: 52111,
+                                                    title: renderDepthTitle
+                                                },
+                                                {
+                                                    id: 52112,
                                                     title: ({ path }) => (path.length >= maxDepth ?
                                                         'This cannot be dragged deeper' :
                                                         'This can be dragged deeper'
@@ -125,6 +156,7 @@ class App extends Component {
                             ],
                         },
                         {
+                            id: 53,
                             title: 'When node contents are really long, it will cause a horizontal scrollbar' +
                                 ' to appear. Deeply nested elements will also trigger the scrollbar.',
                         },
@@ -136,9 +168,11 @@ class App extends Component {
         this.updateTreeData = this.updateTreeData.bind(this);
         this.expandAll = this.expandAll.bind(this);
         this.collapseAll = this.collapseAll.bind(this);
+        this.getResultTree = this.getResultTree.bind(this);
     }
 
     updateTreeData(treeData) {
+        console.log('updateTreeData', treeData);
         this.setState({ treeData });
     }
 
@@ -159,6 +193,48 @@ class App extends Component {
         this.expand(false);
     }
 
+    getResultTree() {
+        this.getResultTree(false);
+    }
+
+    replaceChildrenIntoNode(nodeInfo) {
+        let tempObj = {
+                id: 9999,
+                title: (
+                    <div>
+                        <div
+                            style={{
+                                backgroundColor: 'gray',
+                                display: 'inline-block',
+                                borderRadius: 10,
+                                color: '#FFF',
+                                padding: '0 5px',
+                            }}
+                        >
+                            Neww Component
+                        </div>
+                    </div>
+                ),
+            };
+
+        console.log("asd" , nodeInfo.node.id);
+
+        let newTree = addNodeUnderParent({
+            treeData: this.state.treeData,
+            newNode: tempObj,
+            parentKey: nodeInfo.node.id,
+            getNodeKey: ({ node }) => node.id
+        });
+
+        this.setState({
+            treeData: newTree.treeData
+        });
+    };
+
+    addChildrenToNode(nodeInfo) {
+        console.log('addChildrenToNode', nodeInfo);
+    };
+
     render() {
         const projectName = 'React Sortable Tree';
         const authorName = 'Chris Fritz';
@@ -176,7 +252,7 @@ class App extends Component {
             node,
             path,
             treeIndex,
-            lowerSiblingCounts: _lowerSiblingCounts,
+            lowerSiblingCounts
         }) => {
             const objectString = Object.keys(node)
                 .map(k => (k === 'children' ? 'children: Array' : `${k}: '${node[k]}'`))
@@ -186,6 +262,7 @@ class App extends Component {
                 'Info passed to the button generator:\n\n' +
                 `node: {\n   ${objectString}\n},\n` +
                 `path: [${path.join(', ')}],\n` +
+                `lowerSiblingCounts: [${path.join(', ')}],\n` +
                 `treeIndex: ${treeIndex}`
             );
         };
@@ -204,6 +281,12 @@ class App extends Component {
 
         const isVirtualized = true;
         const treeContainerStyle = isVirtualized ? { height: 450 } : {};
+        const countries = [
+            { value: 'EN-gb', label: 'England' },
+            { value: 'ES-es', label: 'Spain'},
+            { value: 'TH-th', label: 'Thailand' },
+            { value: 'EN-en', label: 'USA'}
+        ];
 
         return (
             <div>
@@ -274,12 +357,21 @@ class App extends Component {
                             onChange={this.updateTreeData}
                             onMoveNode={({ node, treeIndex, path }) =>
                                 console.debug( // eslint-disable-line no-console
+                                    'onMoveNode',
                                     'node:', node,
                                     'treeIndex:', treeIndex,
                                     'path:', path,
                                 )
                             }
-                            maxDepth={maxDepth}
+                            getNodeKey={({ node, treeIndex }) => {
+                                console.log(node.id);
+                                return node.id;
+                            }}
+                            onVisibilityToggle={({ treeData, node, expanded }) => {
+                                // Nel nostro funzionamento: quando clicco e il nodo è "incompleto" faccio
+                                // una chimata ajax che mi riempie il nodo e lo mostro
+                                console.log('onVisibilityToggle', treeData, node, expanded);
+                            }}
                             searchQuery={searchString}
                             searchFocusOffset={searchFocusIndex}
                             searchFinishCallback={matches =>
@@ -299,6 +391,14 @@ class App extends Component {
                                     >
                                         ℹ
                                     </button>,
+                                    <button
+                                        style={{
+                                            verticalAlign: 'middle',
+                                        }}
+                                        onClick={() => (this.replaceChildrenIntoNode(rowInfo))}
+                                    >
+                                        Replace children
+                                    </button>
                                 ],
                             })}
                         />
