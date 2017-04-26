@@ -1,6 +1,6 @@
 !function(root, factory) {
-    "object" == typeof exports && "object" == typeof module ? module.exports = factory(require("react"), require("lodash.isequal"), require("react-dnd"), require("react-dnd-html5-backend"), require("react-dnd-scrollzone"), require("react-virtualized")) : "function" == typeof define && define.amd ? define([ "react", "lodash.isequal", "react-dnd", "react-dnd-html5-backend", "react-dnd-scrollzone", "react-virtualized" ], factory) : "object" == typeof exports ? exports.ReactSortableTree = factory(require("react"), require("lodash.isequal"), require("react-dnd"), require("react-dnd-html5-backend"), require("react-dnd-scrollzone"), require("react-virtualized")) : root.ReactSortableTree = factory(root.react, root["lodash.isequal"], root["react-dnd"], root["react-dnd-html5-backend"], root["react-dnd-scrollzone"], root["react-virtualized"]);
-}(this, function(__WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_20__, __WEBPACK_EXTERNAL_MODULE_21__, __WEBPACK_EXTERNAL_MODULE_22__, __WEBPACK_EXTERNAL_MODULE_23__, __WEBPACK_EXTERNAL_MODULE_24__) {
+    "object" == typeof exports && "object" == typeof module ? module.exports = factory(require("prop-types"), require("react"), require("lodash.isequal"), require("react-dnd"), require("react-dnd-html5-backend"), require("react-dnd-scrollzone"), require("react-virtualized")) : "function" == typeof define && define.amd ? define([ "prop-types", "react", "lodash.isequal", "react-dnd", "react-dnd-html5-backend", "react-dnd-scrollzone", "react-virtualized" ], factory) : "object" == typeof exports ? exports.ReactSortableTree = factory(require("prop-types"), require("react"), require("lodash.isequal"), require("react-dnd"), require("react-dnd-html5-backend"), require("react-dnd-scrollzone"), require("react-virtualized")) : root.ReactSortableTree = factory(root["prop-types"], root.react, root["lodash.isequal"], root["react-dnd"], root["react-dnd-html5-backend"], root["react-dnd-scrollzone"], root["react-virtualized"]);
+}(this, function(__WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_5__, __WEBPACK_EXTERNAL_MODULE_22__, __WEBPACK_EXTERNAL_MODULE_23__, __WEBPACK_EXTERNAL_MODULE_24__, __WEBPACK_EXTERNAL_MODULE_25__, __WEBPACK_EXTERNAL_MODULE_26__) {
     /******/
     return function(modules) {
         /******/
@@ -77,7 +77,7 @@
         Object.defineProperty(exports, "__esModule", {
             value: !0
         }), exports.SortableTreeWithoutDndContext = void 0;
-        var _defaultHandlers = __webpack_require__(5);
+        var _defaultHandlers = __webpack_require__(6);
         Object.keys(_defaultHandlers).forEach(function(key) {
             "default" !== key && "__esModule" !== key && Object.defineProperty(exports, key, {
                 enumerable: !0,
@@ -95,7 +95,7 @@
                 }
             });
         });
-        var _reactSortableTree = __webpack_require__(7), _reactSortableTree2 = _interopRequireDefault(_reactSortableTree);
+        var _reactSortableTree = __webpack_require__(9), _reactSortableTree2 = _interopRequireDefault(_reactSortableTree);
         exports.default = _reactSortableTree2.default, // Export the tree component without the react-dnd DragDropContext,
         // for when component is used with other components using react-dnd.
         // see: https://github.com/gaearon/react-dnd/issues/186
@@ -549,14 +549,6 @@
                     treeIndex: currentIndex
                 }) ]);
             };
-            // If the potential parent node is at the targetDepth, it isn't eligible
-            if (currentDepth === targetDepth) return {
-                node: node,
-                nextIndex: currentIndex + 1 + getDescendantCount({
-                    node: node,
-                    ignoreCollapsed: ignoreCollapsed
-                })
-            };
             // If the current position is the only possible place to add, add it
             if (currentIndex >= minimumTreeIndex - 1 || isLastChild && (!node.children || !node.children.length)) {
                 if ("function" == typeof node.children) throw new Error("Cannot add to children defined by a function");
@@ -569,40 +561,53 @@
                     node: _nextNode,
                     nextIndex: currentIndex + 2,
                     insertedTreeIndex: currentIndex + 1,
-                    parentPath: selfPath(_nextNode)
+                    parentPath: selfPath(_nextNode),
+                    parentNode: isPseudoRoot ? null : _nextNode
                 };
             }
-            if (currentDepth === targetDepth - 1) {
+            // If this is the target depth for the insertion,
+            // i.e., where the newNode can be added to the current node's children
+            if (currentDepth >= targetDepth - 1) {
                 // Skip over nodes with no children or hidden children
                 if (!node.children || "function" == typeof node.children || node.expanded !== !0 && ignoreCollapsed && !isPseudoRoot) return {
                     node: node,
                     nextIndex: currentIndex + 1
                 };
                 for (var _childIndex = currentIndex + 1, _insertedTreeIndex = null, insertIndex = null, i = 0; i < node.children.length; i++) {
+                    // If a valid location is found, mark it as the insertion location and
+                    // break out of the loop
                     if (_childIndex >= minimumTreeIndex) {
                         _insertedTreeIndex = _childIndex, insertIndex = i;
                         break;
                     }
+                    // Increment the index by the child itself plus the number of descendants it has
                     _childIndex += 1 + getDescendantCount({
                         node: node.children[i],
                         ignoreCollapsed: ignoreCollapsed
                     });
                 }
+                // If no valid indices to add the node were found
                 if (null === insertIndex) {
+                    // If the last position in this node's children is less than the minimum index
+                    // and there are more children on the level of this node, return without insertion
                     if (_childIndex < minimumTreeIndex && !isLastChild) return {
                         node: node,
                         nextIndex: _childIndex
                     };
+                    // Use the last position in the children array to insert the newNode
                     _insertedTreeIndex = _childIndex, insertIndex = node.children.length;
                 }
+                // Insert the newNode at the insertIndex
                 var _nextNode2 = _extends({}, node, {
                     children: [].concat(_toConsumableArray(node.children.slice(0, insertIndex)), [ newNode ], _toConsumableArray(node.children.slice(insertIndex)))
                 });
+                // Return node with successful insert result
                 return {
                     node: _nextNode2,
                     nextIndex: _childIndex,
                     insertedTreeIndex: _insertedTreeIndex,
-                    parentPath: selfPath(_nextNode2)
+                    parentPath: selfPath(_nextNode2),
+                    parentNode: isPseudoRoot ? null : _nextNode2
                 };
             }
             // Skip over nodes with no children or hidden children
@@ -611,7 +616,7 @@
                 nextIndex: currentIndex + 1
             };
             // Get all descendants
-            var insertedTreeIndex = null, pathFragment = null, childIndex = currentIndex + 1, newChildren = node.children;
+            var insertedTreeIndex = null, pathFragment = null, parentNode = null, childIndex = currentIndex + 1, newChildren = node.children;
             "function" != typeof newChildren && (newChildren = newChildren.map(function(child, i) {
                 if (null !== insertedTreeIndex) return child;
                 var mapResult = addNodeAtDepthAndIndex({
@@ -628,7 +633,8 @@
                     path: []
                 });
                 return "insertedTreeIndex" in mapResult && (insertedTreeIndex = mapResult.insertedTreeIndex, 
-                pathFragment = mapResult.parentPath), childIndex = mapResult.nextIndex, mapResult.node;
+                pathFragment = mapResult.parentPath, parentNode = mapResult.parentNode), childIndex = mapResult.nextIndex, 
+                mapResult.node;
             }));
             var nextNode = _extends({}, node, {
                 children: newChildren
@@ -637,8 +643,8 @@
                 nextIndex: childIndex
             };
             return null !== insertedTreeIndex && (result.insertedTreeIndex = insertedTreeIndex, 
-            result.parentPath = [].concat(_toConsumableArray(selfPath(nextNode)), _toConsumableArray(pathFragment))), 
-            result;
+            result.parentPath = [].concat(_toConsumableArray(selfPath(nextNode)), _toConsumableArray(pathFragment)), 
+            result.parentNode = parentNode), result;
         }
         /**
 	 * Insert a node into the tree at the given depth, after the minimum index
@@ -651,11 +657,11 @@
 	 * @param {boolean=} expandParent - If true, expands the parent of the inserted node
 	 * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
 	 *
-	
 	 * @return {Object} result
 	 * @return {Object[]} result.treeData - The tree data with the node added
 	 * @return {number} result.treeIndex - The tree index at which the node was inserted
 	 * @return {number[]|string[]} result.path - Array of keys leading to the node location after insertion
+	 * @return {Object} result.parentNode - The parent node of the inserted node
 	 */
         function insertNode(_ref20) {
             var treeData = _ref20.treeData, targetDepth = _ref20.depth, minimumTreeIndex = _ref20.minimumTreeIndex, newNode = _ref20.newNode, _ref20$getNodeKey = _ref20.getNodeKey, getNodeKey = void 0 === _ref20$getNodeKey ? function() {} : _ref20$getNodeKey, _ref20$ignoreCollapse = _ref20.ignoreCollapsed, ignoreCollapsed = void 0 === _ref20$ignoreCollapse || _ref20$ignoreCollapse, _ref20$expandParent = _ref20.expandParent, expandParent = void 0 !== _ref20$expandParent && _ref20$expandParent;
@@ -665,7 +671,8 @@
                 path: [ getNodeKey({
                     node: newNode,
                     treeIndex: 0
-                }) ]
+                }) ],
+                parentNode: null
             };
             var insertResult = addNodeAtDepthAndIndex({
                 targetDepth: targetDepth,
@@ -690,7 +697,8 @@
                 path: [].concat(_toConsumableArray(insertResult.parentPath), [ getNodeKey({
                     node: newNode,
                     treeIndex: treeIndex
-                }) ])
+                }) ]),
+                parentNode: insertResult.parentNode
             };
         }
         /**
@@ -714,14 +722,8 @@
                 treeData: treeData,
                 getNodeKey: getNodeKey,
                 ignoreCollapsed: ignoreCollapsed,
-                callback: function(_ref22) {
-                    var node = _ref22.node, lowerSiblingCounts = _ref22.lowerSiblingCounts, path = _ref22.path, treeIndex = _ref22.treeIndex;
-                    flattened.push({
-                        node: node,
-                        lowerSiblingCounts: lowerSiblingCounts,
-                        path: path,
-                        treeIndex: treeIndex
-                    });
+                callback: function(nodeInfo) {
+                    flattened.push(nodeInfo);
                 }
             }), flattened;
         }
@@ -736,12 +738,12 @@
 	 *
 	 * @return {Object[]} treeData - The flat data represented as a tree
 	 */
-        function getTreeFromFlatData(_ref23) {
-            var flatData = _ref23.flatData, _ref23$getKey = _ref23.getKey, getKey = void 0 === _ref23$getKey ? function(node) {
+        function getTreeFromFlatData(_ref22) {
+            var flatData = _ref22.flatData, _ref22$getKey = _ref22.getKey, getKey = void 0 === _ref22$getKey ? function(node) {
                 return node.id;
-            } : _ref23$getKey, _ref23$getParentKey = _ref23.getParentKey, getParentKey = void 0 === _ref23$getParentKey ? function(node) {
+            } : _ref22$getKey, _ref22$getParentKey = _ref22.getParentKey, getParentKey = void 0 === _ref22$getParentKey ? function(node) {
                 return node.parentId;
-            } : _ref23$getParentKey, _ref23$rootKey = _ref23.rootKey, rootKey = void 0 === _ref23$rootKey ? "0" : _ref23$rootKey;
+            } : _ref22$getParentKey, _ref22$rootKey = _ref22.rootKey, rootKey = void 0 === _ref22$rootKey ? "0" : _ref22$rootKey;
             if (!flatData) return [];
             var childrenToParents = {};
             if (flatData.forEach(function(child) {
@@ -804,9 +806,9 @@
 	 *                               If expandAllMatchPaths and expandFocusMatchPaths are both false,
 	 *                               it will be the same as the original tree data.
 	 */
-        function find(_ref24) {
-            var getNodeKey = _ref24.getNodeKey, treeData = _ref24.treeData, searchQuery = _ref24.searchQuery, searchMethod = _ref24.searchMethod, searchFocusOffset = _ref24.searchFocusOffset, _ref24$expandAllMatch = _ref24.expandAllMatchPaths, expandAllMatchPaths = void 0 !== _ref24$expandAllMatch && _ref24$expandAllMatch, _ref24$expandFocusMat = _ref24.expandFocusMatchPaths, expandFocusMatchPaths = void 0 === _ref24$expandFocusMat || _ref24$expandFocusMat, matchCount = 0, trav = function trav(_ref25) {
-                var _ref25$isPseudoRoot = _ref25.isPseudoRoot, isPseudoRoot = void 0 !== _ref25$isPseudoRoot && _ref25$isPseudoRoot, node = _ref25.node, currentIndex = _ref25.currentIndex, _ref25$path = _ref25.path, path = void 0 === _ref25$path ? [] : _ref25$path, matches = [], isSelfMatch = !1, hasFocusMatch = !1, selfPath = isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [ getNodeKey({
+        function find(_ref23) {
+            var getNodeKey = _ref23.getNodeKey, treeData = _ref23.treeData, searchQuery = _ref23.searchQuery, searchMethod = _ref23.searchMethod, searchFocusOffset = _ref23.searchFocusOffset, _ref23$expandAllMatch = _ref23.expandAllMatchPaths, expandAllMatchPaths = void 0 !== _ref23$expandAllMatch && _ref23$expandAllMatch, _ref23$expandFocusMat = _ref23.expandFocusMatchPaths, expandFocusMatchPaths = void 0 === _ref23$expandFocusMat || _ref23$expandFocusMat, matchCount = 0, trav = function trav(_ref24) {
+                var _ref24$isPseudoRoot = _ref24.isPseudoRoot, isPseudoRoot = void 0 !== _ref24$isPseudoRoot && _ref24$isPseudoRoot, node = _ref24.node, currentIndex = _ref24.currentIndex, _ref24$path = _ref24.path, path = void 0 === _ref24$path ? [] : _ref24$path, matches = [], isSelfMatch = !1, hasFocusMatch = !1, selfPath = isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [ getNodeKey({
                     node: node,
                     treeIndex: currentIndex
                 }) ]), extraInfo = isPseudoRoot ? null : {
@@ -1073,6 +1075,10 @@
     }, /* 5 */
     /***/
     function(module, exports) {
+        module.exports = __WEBPACK_EXTERNAL_MODULE_5__;
+    }, /* 6 */
+    /***/
+    function(module, exports) {
         "use strict";
         function defaultGetNodeKey(_ref) {
             var treeIndex = (_ref.node, _ref.treeIndex);
@@ -1105,7 +1111,44 @@
             return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
         };
         exports.defaultGetNodeKey = defaultGetNodeKey, exports.defaultSearchMethod = defaultSearchMethod;
-    }, /* 6 */
+    }, /* 7 */
+    /***/
+    function(module, exports, __webpack_require__) {
+        "use strict";
+        /**
+	 * Insert a node into the tree at the given depth, after the minimum index
+	 *
+	 * @param {!Object[]} treeData - Tree data
+	 * @param {!number} depth - The depth to insert the node at (the first level of the array being depth 0)
+	 * @param {!number} minimumTreeIndex - The lowest possible treeIndex to insert the node at
+	 * @param {!Object} newNode - The node to insert into the tree
+	 * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
+	 * @param {boolean=} expandParent - If true, expands the parent of the inserted node
+	 * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
+	 *
+	 * @return {Object} result
+	 * @return {Object[]} result.treeData - The tree data with the node added
+	 * @return {number} result.treeIndex - The tree index at which the node was inserted
+	 * @return {number[]|string[]} result.path - Array of keys leading to the node location after insertion
+	 */
+        function memoizedInsertNode(args) {
+            var keysArray = Object.keys(args).sort(), argsArray = keysArray.map(function(key) {
+                return args[key];
+            });
+            // If the arguments for the last insert operation are different than this time,
+            // recalculate the result
+            return (argsArray.length !== memoizedInsertArgsArray.length || argsArray.some(function(arg, index) {
+                return arg !== memoizedInsertArgsArray[index];
+            }) || keysArray.some(function(key, index) {
+                return key !== memoizedInsertKeysArray[index];
+            })) && (memoizedInsertArgsArray = argsArray, memoizedInsertKeysArray = keysArray, 
+            memoizedInsertResult = (0, _treeDataUtils.insertNode)(args)), memoizedInsertResult;
+        }
+        Object.defineProperty(exports, "__esModule", {
+            value: !0
+        }), exports.memoizedInsertNode = memoizedInsertNode;
+        var _treeDataUtils = __webpack_require__(1), memoizedInsertArgsArray = [], memoizedInsertKeysArray = [], memoizedInsertResult = null;
+    }, /* 8 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
@@ -1119,16 +1162,46 @@
             for (var i in obj) keys.indexOf(i) >= 0 || Object.prototype.hasOwnProperty.call(obj, i) && (target[i] = obj[i]);
             return target;
         }
+        function _classCallCheck(instance, Constructor) {
+            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        }
+        function _possibleConstructorReturn(self, call) {
+            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        }
+        function _inherits(subClass, superClass) {
+            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+            subClass.prototype = Object.create(superClass && superClass.prototype, {
+                constructor: {
+                    value: subClass,
+                    enumerable: !1,
+                    writable: !0,
+                    configurable: !0
+                }
+            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
-        var _extends = Object.assign || function(target) {
+        var _createClass = function() {
+            function defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
+                }
+            }
+            return function(Constructor, protoProps, staticProps) {
+                return protoProps && defineProperties(Constructor.prototype, protoProps), staticProps && defineProperties(Constructor, staticProps), 
+                Constructor;
+            };
+        }(), _extends = Object.assign || function(target) {
             for (var i = 1; i < arguments.length; i++) {
                 var source = arguments[i];
                 for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
             }
             return target;
-        }, _react = __webpack_require__(4), _react2 = _interopRequireDefault(_react), _browserUtils = __webpack_require__(9), _nodeRendererDefault = __webpack_require__(17), _nodeRendererDefault2 = _interopRequireDefault(_nodeRendererDefault), _treeDataUtils = __webpack_require__(1), styles = _nodeRendererDefault2.default;
+        }, _react = __webpack_require__(5), _react2 = _interopRequireDefault(_react), _propTypes = __webpack_require__(4), _propTypes2 = _interopRequireDefault(_propTypes), _browserUtils = __webpack_require__(11), _nodeRendererDefault = __webpack_require__(19), _nodeRendererDefault2 = _interopRequireDefault(_nodeRendererDefault), _treeDataUtils = __webpack_require__(1), styles = _nodeRendererDefault2.default;
         // Add extra classes in browsers that don't support flex
         _browserUtils.getIEVersion < 10 && (styles = _extends({}, _nodeRendererDefault2.default, {
             row: styles.row + " " + styles.row_NoFlex,
@@ -1136,125 +1209,138 @@
             rowLabel: styles.rowLabel + " " + styles.rowLabel_NoFlex,
             rowToolbar: styles.rowToolbar + " " + styles.rowToolbar_NoFlex
         }));
-        var NodeRendererDefault = function(_ref) {
-            var scaffoldBlockPxWidth = _ref.scaffoldBlockPxWidth, toggleChildrenVisibility = _ref.toggleChildrenVisibility, connectDragPreview = _ref.connectDragPreview, connectDragSource = _ref.connectDragSource, isDragging = _ref.isDragging, isOver = _ref.isOver, canDrop = _ref.canDrop, node = _ref.node, draggedNode = _ref.draggedNode, path = _ref.path, treeIndex = _ref.treeIndex, isSearchMatch = _ref.isSearchMatch, isSearchFocus = _ref.isSearchFocus, buttons = _ref.buttons, className = _ref.className, _ref$style = _ref.style, style = void 0 === _ref$style ? {} : _ref$style, otherProps = (_ref.startDrag, 
-            _ref.endDrag, _objectWithoutProperties(_ref, [ "scaffoldBlockPxWidth", "toggleChildrenVisibility", "connectDragPreview", "connectDragSource", "isDragging", "isOver", "canDrop", "node", "draggedNode", "path", "treeIndex", "isSearchMatch", "isSearchFocus", "buttons", "className", "style", "startDrag", "endDrag" ])), handle = void 0;
-            // Show a loading symbol on the handle when the children are expanded
-            //  and yet still defined by a function (a callback to fetch the children)
-            handle = "function" == typeof node.children && node.expanded ? _react2.default.createElement("div", {
-                className: styles.loadingHandle
-            }, _react2.default.createElement("div", {
-                className: styles.loadingCircle
-            }, _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }), _react2.default.createElement("div", {
-                className: styles.loadingCirclePoint
-            }))) : connectDragSource(_react2.default.createElement("div", {
-                className: styles.moveHandle
-            }), {
-                dropEffect: "copy"
-            });
-            var isDraggedDescendant = draggedNode && (0, _treeDataUtils.isDescendant)(draggedNode, node);
-            return _react2.default.createElement("div", _extends({
-                style: {
-                    height: "100%"
-                }
-            }, otherProps), toggleChildrenVisibility && node.children && node.children.length > 0 && _react2.default.createElement("div", null, _react2.default.createElement("button", {
-                "aria-label": node.expanded ? "Collapse" : "Expand",
-                className: node.expanded ? styles.collapseButton : styles.expandButton,
-                style: {
-                    left: -.5 * scaffoldBlockPxWidth
-                },
-                onClick: function() {
-                    return toggleChildrenVisibility({
+        var NodeRendererDefault = function(_Component) {
+            function NodeRendererDefault() {
+                return _classCallCheck(this, NodeRendererDefault), _possibleConstructorReturn(this, (NodeRendererDefault.__proto__ || Object.getPrototypeOf(NodeRendererDefault)).apply(this, arguments));
+            }
+            return _inherits(NodeRendererDefault, _Component), _createClass(NodeRendererDefault, [ {
+                key: "render",
+                value: function() {
+                    var _props = this.props, scaffoldBlockPxWidth = _props.scaffoldBlockPxWidth, toggleChildrenVisibility = _props.toggleChildrenVisibility, connectDragPreview = _props.connectDragPreview, connectDragSource = _props.connectDragSource, isDragging = _props.isDragging, canDrop = _props.canDrop, canDrag = _props.canDrag, node = _props.node, draggedNode = _props.draggedNode, path = _props.path, treeIndex = _props.treeIndex, isSearchMatch = _props.isSearchMatch, isSearchFocus = _props.isSearchFocus, buttons = _props.buttons, className = _props.className, _props$style = _props.style, style = void 0 === _props$style ? {} : _props$style, didDrop = _props.didDrop, otherProps = (_props.isOver, 
+                    _props.parentNode, _props.endDrag, _props.startDrag, _objectWithoutProperties(_props, [ "scaffoldBlockPxWidth", "toggleChildrenVisibility", "connectDragPreview", "connectDragSource", "isDragging", "canDrop", "canDrag", "node", "draggedNode", "path", "treeIndex", "isSearchMatch", "isSearchFocus", "buttons", "className", "style", "didDrop", "isOver", "parentNode", "endDrag", "startDrag" ])), handle = void 0;
+                    canDrag && (// Show a loading symbol on the handle when the children are expanded
+                    //  and yet still defined by a function (a callback to fetch the children)
+                    handle = "function" == typeof node.children && node.expanded ? _react2.default.createElement("div", {
+                        className: styles.loadingHandle
+                    }, _react2.default.createElement("div", {
+                        className: styles.loadingCircle
+                    }, _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }), _react2.default.createElement("div", {
+                        className: styles.loadingCirclePoint
+                    }))) : connectDragSource(_react2.default.createElement("div", {
+                        className: styles.moveHandle
+                    }), {
+                        dropEffect: "copy"
+                    }));
+                    var isDraggedDescendant = draggedNode && (0, _treeDataUtils.isDescendant)(draggedNode, node), isLandingPadActive = !didDrop && isDragging;
+                    return _react2.default.createElement("div", _extends({
+                        style: {
+                            height: "100%"
+                        }
+                    }, otherProps), toggleChildrenVisibility && node.children && node.children.length > 0 && _react2.default.createElement("div", null, _react2.default.createElement("button", {
+                        type: "button",
+                        "aria-label": node.expanded ? "Collapse" : "Expand",
+                        className: node.expanded ? styles.collapseButton : styles.expandButton,
+                        style: {
+                            left: -.5 * scaffoldBlockPxWidth
+                        },
+                        onClick: function() {
+                            return toggleChildrenVisibility({
+                                node: node,
+                                path: path,
+                                treeIndex: treeIndex
+                            });
+                        }
+                    }), node.expanded && !isDragging && _react2.default.createElement("div", {
+                        style: {
+                            width: scaffoldBlockPxWidth
+                        },
+                        className: styles.lineChildren
+                    })), _react2.default.createElement("div", {
+                        className: styles.rowWrapper
+                    }, connectDragPreview(_react2.default.createElement("div", {
+                        className: styles.row + (isLandingPadActive ? " " + styles.rowLandingPad : "") + (isLandingPadActive && !canDrop ? " " + styles.rowCancelPad : "") + (isSearchMatch ? " " + styles.rowSearchMatch : "") + (isSearchFocus ? " " + styles.rowSearchFocus : "") + (className ? " " + className : ""),
+                        style: _extends({
+                            opacity: isDraggedDescendant ? .5 : 1
+                        }, style)
+                    }, handle, _react2.default.createElement("div", {
+                        className: styles.rowContents + (canDrag ? "" : " " + styles.rowContentsDragDisabled)
+                    }, _react2.default.createElement("div", {
+                        className: styles.rowLabel
+                    }, _react2.default.createElement("span", {
+                        className: styles.rowTitle + (node.subtitle ? " " + styles.rowTitleWithSubtitle : "")
+                    }, "function" == typeof node.title ? node.title({
                         node: node,
                         path: path,
                         treeIndex: treeIndex
-                    });
+                    }) : node.title), node.subtitle && _react2.default.createElement("span", {
+                        className: styles.rowSubtitle
+                    }, "function" == typeof node.subtitle ? node.subtitle({
+                        node: node,
+                        path: path,
+                        treeIndex: treeIndex
+                    }) : node.subtitle)), _react2.default.createElement("div", {
+                        className: styles.rowToolbar
+                    }, buttons && buttons.map(function(btn, index) {
+                        return _react2.default.createElement("div", {
+                            key: index,
+                            className: styles.toolbarButton
+                        }, btn);
+                    })))))));
                 }
-            }), node.expanded && !isDragging && _react2.default.createElement("div", {
-                style: {
-                    width: scaffoldBlockPxWidth
-                },
-                className: styles.lineChildren
-            })), _react2.default.createElement("div", {
-                className: styles.rowWrapper
-            }, connectDragPreview(_react2.default.createElement("div", {
-                className: styles.row + (isDragging && isOver ? " " + styles.rowLandingPad : "") + (isDragging && !isOver && canDrop ? " " + styles.rowCancelPad : "") + (isSearchMatch ? " " + styles.rowSearchMatch : "") + (isSearchFocus ? " " + styles.rowSearchFocus : "") + (className ? " " + className : ""),
-                style: _extends({
-                    opacity: isDraggedDescendant ? .5 : 1
-                }, style)
-            }, handle, _react2.default.createElement("div", {
-                className: styles.rowContents
-            }, _react2.default.createElement("div", {
-                className: styles.rowLabel
-            }, _react2.default.createElement("span", {
-                className: styles.rowTitle + (node.subtitle ? " " + styles.rowTitleWithSubtitle : "")
-            }, "function" == typeof node.title ? node.title({
-                node: node,
-                path: path,
-                treeIndex: treeIndex
-            }) : node.title), node.subtitle && _react2.default.createElement("span", {
-                className: styles.rowSubtitle
-            }, "function" == typeof node.subtitle ? node.subtitle({
-                node: node,
-                path: path,
-                treeIndex: treeIndex
-            }) : node.subtitle)), _react2.default.createElement("div", {
-                className: styles.rowToolbar
-            }, buttons && buttons.map(function(btn, index) {
-                return _react2.default.createElement("div", {
-                    key: index,
-                    className: styles.toolbarButton
-                }, btn);
-            })))))));
-        };
+            } ]), NodeRendererDefault;
+        }(_react.Component);
         NodeRendererDefault.propTypes = {
-            node: _react.PropTypes.object.isRequired,
-            path: _react.PropTypes.arrayOf(_react.PropTypes.oneOfType([ _react.PropTypes.string, _react.PropTypes.number ])).isRequired,
-            treeIndex: _react.PropTypes.number.isRequired,
-            isSearchMatch: _react.PropTypes.bool,
-            isSearchFocus: _react.PropTypes.bool,
-            scaffoldBlockPxWidth: _react.PropTypes.number.isRequired,
-            toggleChildrenVisibility: _react.PropTypes.func,
-            buttons: _react.PropTypes.arrayOf(_react.PropTypes.node),
-            className: _react.PropTypes.string,
-            style: _react.PropTypes.object,
+            node: _propTypes2.default.object.isRequired,
+            path: _propTypes2.default.arrayOf(_propTypes2.default.oneOfType([ _propTypes2.default.string, _propTypes2.default.number ])).isRequired,
+            treeIndex: _propTypes2.default.number.isRequired,
+            isSearchMatch: _propTypes2.default.bool,
+            isSearchFocus: _propTypes2.default.bool,
+            canDrag: _propTypes2.default.bool,
+            scaffoldBlockPxWidth: _propTypes2.default.number.isRequired,
+            toggleChildrenVisibility: _propTypes2.default.func,
+            buttons: _propTypes2.default.arrayOf(_propTypes2.default.node),
+            className: _propTypes2.default.string,
+            style: _propTypes2.default.object,
             // Drag and drop API functions
             // Drag source
-            connectDragPreview: _react.PropTypes.func.isRequired,
-            connectDragSource: _react.PropTypes.func.isRequired,
-            startDrag: _react.PropTypes.func.isRequired,
+            connectDragPreview: _propTypes2.default.func.isRequired,
+            connectDragSource: _propTypes2.default.func.isRequired,
+            parentNode: _propTypes2.default.object,
             // Needed for drag-and-drop utils
-            endDrag: _react.PropTypes.func.isRequired,
+            startDrag: _propTypes2.default.func.isRequired,
             // Needed for drag-and-drop utils
-            isDragging: _react.PropTypes.bool.isRequired,
-            draggedNode: _react.PropTypes.object,
+            endDrag: _propTypes2.default.func.isRequired,
+            // Needed for drag-and-drop utils
+            isDragging: _propTypes2.default.bool.isRequired,
+            didDrop: _propTypes2.default.bool.isRequired,
+            draggedNode: _propTypes2.default.object,
             // Drop target
-            isOver: _react.PropTypes.bool.isRequired,
-            canDrop: _react.PropTypes.bool.isRequired
+            isOver: _propTypes2.default.bool.isRequired,
+            canDrop: _propTypes2.default.bool
         }, exports.default = NodeRendererDefault;
-    }, /* 7 */
+    }, /* 9 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
@@ -1302,9 +1388,9 @@
                 return protoProps && defineProperties(Constructor.prototype, protoProps), staticProps && defineProperties(Constructor, staticProps), 
                 Constructor;
             };
-        }(), _react = __webpack_require__(4), _react2 = _interopRequireDefault(_react), _reactVirtualized = __webpack_require__(24), _lodash = __webpack_require__(20), _lodash2 = _interopRequireDefault(_lodash), _reactDndScrollzone = __webpack_require__(23), _reactDndScrollzone2 = _interopRequireDefault(_reactDndScrollzone);
-        __webpack_require__(16);
-        var _treeNode = __webpack_require__(8), _treeNode2 = _interopRequireDefault(_treeNode), _nodeRendererDefault = __webpack_require__(6), _nodeRendererDefault2 = _interopRequireDefault(_nodeRendererDefault), _treeDataUtils = __webpack_require__(1), _genericUtils = __webpack_require__(11), _defaultHandlers = __webpack_require__(5), _dragAndDropUtils = __webpack_require__(10), _reactSortableTree = __webpack_require__(18), _reactSortableTree2 = _interopRequireDefault(_reactSortableTree), dndTypeCounter = 1, ReactSortableTree = function(_Component) {
+        }(), _react = __webpack_require__(5), _react2 = _interopRequireDefault(_react), _propTypes = __webpack_require__(4), _propTypes2 = _interopRequireDefault(_propTypes), _reactVirtualized = __webpack_require__(26), _lodash = __webpack_require__(22), _lodash2 = _interopRequireDefault(_lodash), _reactDndScrollzone = __webpack_require__(25), _reactDndScrollzone2 = _interopRequireDefault(_reactDndScrollzone);
+        __webpack_require__(18);
+        var _treeNode = __webpack_require__(10), _treeNode2 = _interopRequireDefault(_treeNode), _nodeRendererDefault = __webpack_require__(8), _nodeRendererDefault2 = _interopRequireDefault(_nodeRendererDefault), _treeDataUtils = __webpack_require__(1), _memoizedTreeDataUtils = __webpack_require__(7), _genericUtils = __webpack_require__(13), _defaultHandlers = __webpack_require__(6), _dragAndDropUtils = __webpack_require__(12), _reactSortableTree = __webpack_require__(20), _reactSortableTree2 = _interopRequireDefault(_reactSortableTree), dndTypeCounter = 1, ReactSortableTree = function(_Component) {
             function ReactSortableTree(props) {
                 _classCallCheck(this, ReactSortableTree);
                 var _this = _possibleConstructorReturn(this, (ReactSortableTree.__proto__ || Object.getPrototypeOf(ReactSortableTree)).call(this, props)), dndType = props.dndType, nodeContentRenderer = props.nodeContentRenderer, isVirtualized = props.isVirtualized, slideRegionSize = props.slideRegionSize, treeData = props.treeData;
@@ -1441,12 +1527,13 @@
                 key: "dragHover",
                 value: function(_ref5) {
                     var draggedNode = _ref5.node, depth = _ref5.depth, minimumTreeIndex = _ref5.minimumTreeIndex, addedResult = (0, 
-                    _treeDataUtils.insertNode)({
+                    _memoizedTreeDataUtils.memoizedInsertNode)({
                         treeData: this.state.draggingTreeData,
                         newNode: draggedNode,
                         depth: depth,
                         minimumTreeIndex: minimumTreeIndex,
-                        expandParent: !0
+                        expandParent: !0,
+                        getNodeKey: this.props.getNodeKey
                     }), rows = this.getRows(addedResult.treeData), expandedParentPath = rows[addedResult.treeIndex].path, swapFrom = addedResult.treeIndex, swapTo = minimumTreeIndex, swapLength = 1 + (0, 
                     _treeDataUtils.getDescendantCount)({
                         node: draggedNode
@@ -1472,7 +1559,7 @@
             }, {
                 key: "endDrag",
                 value: function(dropResult) {
-                    return dropResult ? void this.moveNode(dropResult) : this.setState({
+                    return dropResult && dropResult.node ? void this.moveNode(dropResult) : this.setState({
                         draggingTreeData: null,
                         swapFrom: null,
                         swapLength: null,
@@ -1581,39 +1668,45 @@
             }, {
                 key: "renderRow",
                 value: function(_ref13, listIndex, key, style, getPrevRow, matchKeys) {
-                    var node = _ref13.node, path = _ref13.path, lowerSiblingCounts = _ref13.lowerSiblingCounts, treeIndex = _ref13.treeIndex, TreeNodeRenderer = this.treeNodeRenderer, NodeContentRenderer = this.nodeContentRenderer, nodeKey = path[path.length - 1], isSearchMatch = nodeKey in matchKeys, isSearchFocus = isSearchMatch && matchKeys[nodeKey] === this.props.searchFocusOffset, nodeProps = this.props.generateNodeProps ? this.props.generateNodeProps({
+                    var node = _ref13.node, parentNode = _ref13.parentNode, path = _ref13.path, lowerSiblingCounts = _ref13.lowerSiblingCounts, treeIndex = _ref13.treeIndex, _props2 = this.props, canDrag = _props2.canDrag, canDrop = _props2.canDrop, generateNodeProps = _props2.generateNodeProps, getNodeKey = _props2.getNodeKey, maxDepth = _props2.maxDepth, scaffoldBlockPxWidth = _props2.scaffoldBlockPxWidth, searchFocusOffset = _props2.searchFocusOffset, TreeNodeRenderer = this.treeNodeRenderer, NodeContentRenderer = this.nodeContentRenderer, nodeKey = path[path.length - 1], isSearchMatch = nodeKey in matchKeys, isSearchFocus = isSearchMatch && matchKeys[nodeKey] === searchFocusOffset, callbackParams = {
                         node: node,
+                        parentNode: parentNode,
                         path: path,
                         lowerSiblingCounts: lowerSiblingCounts,
                         treeIndex: treeIndex,
                         isSearchMatch: isSearchMatch,
                         isSearchFocus: isSearchFocus
-                    }) : {};
+                    }, nodeProps = generateNodeProps ? generateNodeProps(callbackParams) : {}, rowCanDrag = "function" != typeof canDrag ? canDrag : canDrag(callbackParams);
                     return _react2.default.createElement(TreeNodeRenderer, {
                         style: style,
                         key: key,
                         treeIndex: treeIndex,
                         listIndex: listIndex,
                         getPrevRow: getPrevRow,
+                        treeData: this.state.draggingTreeData || this.state.treeData,
+                        getNodeKey: getNodeKey,
+                        customCanDrop: canDrop,
                         node: node,
                         path: path,
                         lowerSiblingCounts: lowerSiblingCounts,
-                        scaffoldBlockPxWidth: this.props.scaffoldBlockPxWidth,
+                        scaffoldBlockPxWidth: scaffoldBlockPxWidth,
                         swapFrom: this.state.swapFrom,
                         swapLength: this.state.swapLength,
                         swapDepth: this.state.swapDepth,
-                        maxDepth: this.props.maxDepth,
+                        maxDepth: maxDepth,
                         dragHover: this.dragHover
                     }, _react2.default.createElement(NodeContentRenderer, _extends({
                         node: node,
+                        parentNode: parentNode,
                         path: path,
                         isSearchMatch: isSearchMatch,
                         isSearchFocus: isSearchFocus,
                         treeIndex: treeIndex,
                         startDrag: this.startDrag,
                         endDrag: this.endDrag,
+                        canDrag: rowCanDrag,
                         toggleChildrenVisibility: this.toggleChildrenVisibility,
-                        scaffoldBlockPxWidth: this.props.scaffoldBlockPxWidth
+                        scaffoldBlockPxWidth: scaffoldBlockPxWidth
                     }, nodeProps)));
                 }
             } ]), ReactSortableTree;
@@ -1625,65 +1718,69 @@
             // `subtitle` is a secondary label for the node
             // `expanded` shows children of the node if true, or hides them if false. Defaults to false.
             // `children` is an array of child nodes belonging to the node.
-            treeData: _react.PropTypes.arrayOf(_react.PropTypes.object).isRequired,
+            treeData: _propTypes2.default.arrayOf(_propTypes2.default.object).isRequired,
             // Style applied to the container wrapping the tree (style defaults to {height: '100%'})
-            style: _react.PropTypes.object,
+            style: _propTypes2.default.object,
             // Class name for the container wrapping the tree
-            className: _react.PropTypes.string,
+            className: _propTypes2.default.string,
             // Style applied to the inner, scrollable container (for padding, etc.)
-            innerStyle: _react.PropTypes.object,
+            innerStyle: _propTypes2.default.object,
             // Used by react-virtualized
             // Either a fixed row height (number) or a function that returns the
             // height of a row given its index: `({ index: number }): number`
-            rowHeight: _react.PropTypes.oneOfType([ _react.PropTypes.number, _react.PropTypes.func ]),
+            rowHeight: _propTypes2.default.oneOfType([ _propTypes2.default.number, _propTypes2.default.func ]),
             // Size in px of the region near the edges that initiates scrolling on dragover
-            slideRegionSize: _react.PropTypes.number.isRequired,
+            slideRegionSize: _propTypes2.default.number.isRequired,
             // eslint-disable-line react/no-unused-prop-types
             // Custom properties to hand to the react-virtualized list
             // https://github.com/bvaughn/react-virtualized/blob/master/docs/List.md#prop-types
-            reactVirtualizedListProps: _react.PropTypes.object,
+            reactVirtualizedListProps: _propTypes2.default.object,
             // The width of the blocks containing the lines representing the structure of the tree.
-            scaffoldBlockPxWidth: _react.PropTypes.number,
+            scaffoldBlockPxWidth: _propTypes2.default.number,
             // Maximum depth nodes can be inserted at. Defaults to infinite.
-            maxDepth: _react.PropTypes.number,
+            maxDepth: _propTypes2.default.number,
             // The method used to search nodes.
             // Defaults to a function that uses the `searchQuery` string to search for nodes with
             // matching `title` or `subtitle` values.
             // NOTE: Changing `searchMethod` will not update the search, but changing the `searchQuery` will.
-            searchMethod: _react.PropTypes.func,
+            searchMethod: _propTypes2.default.func,
             // eslint-disable-line react/no-unused-prop-types
             // Used by the `searchMethod` to highlight and scroll to matched nodes.
             // Should be a string for the default `searchMethod`, but can be anything when using a custom search.
-            searchQuery: _react.PropTypes.any,
+            searchQuery: _propTypes2.default.any,
             // Outline the <`searchFocusOffset`>th node and scroll to it.
-            searchFocusOffset: _react.PropTypes.number,
+            searchFocusOffset: _propTypes2.default.number,
             // Get the nodes that match the search criteria. Used for counting total matches, etc.
-            searchFinishCallback: _react.PropTypes.func,
+            searchFinishCallback: _propTypes2.default.func,
             // eslint-disable-line react/no-unused-prop-types
             // Generate an object with additional props to be passed to the node renderer.
             // Use this for adding buttons via the `buttons` key,
             // or additional `style` / `className` settings.
-            generateNodeProps: _react.PropTypes.func,
+            generateNodeProps: _propTypes2.default.func,
             // Set to false to disable virtualization.
             // NOTE: Auto-scrolling while dragging, and scrolling to the `searchFocusOffset` will be disabled.
-            isVirtualized: _react.PropTypes.bool,
+            isVirtualized: _propTypes2.default.bool,
             // Override the default component for rendering nodes (but keep the scaffolding generator)
             // This is an advanced option for complete customization of the appearance.
             // It is best to copy the component in `node-renderer-default.js` to use as a base, and customize as needed.
-            nodeContentRenderer: _react.PropTypes.any,
+            nodeContentRenderer: _propTypes2.default.any,
             // Determine the unique key used to identify each node and
             // generate the `path` array passed in callbacks.
             // By default, returns the index in the tree (omitting hidden nodes).
-            getNodeKey: _react.PropTypes.func,
+            getNodeKey: _propTypes2.default.func,
             // Called whenever tree data changed.
             // Just like with React input elements, you have to update your
             // own component's data to see the changes reflected.
-            onChange: _react.PropTypes.func.isRequired,
+            onChange: _propTypes2.default.func.isRequired,
             // Called after node move operation.
-            onMoveNode: _react.PropTypes.func,
+            onMoveNode: _propTypes2.default.func,
+            // Determine whether a node can be dragged. Set to false to disable dragging on all nodes.
+            canDrag: _propTypes2.default.oneOfType([ _propTypes2.default.func, _propTypes2.default.bool ]),
+            // Determine whether a node can be dropped based on its path and parents'.
+            canDrop: _propTypes2.default.func,
             // Called after children nodes collapsed or expanded.
-            onVisibilityToggle: _react.PropTypes.func,
-            dndType: _react.PropTypes.string
+            onVisibilityToggle: _propTypes2.default.func,
+            dndType: _propTypes2.default.string
         }, ReactSortableTree.defaultProps = {
             getNodeKey: _defaultHandlers.defaultGetNodeKey,
             nodeContentRenderer: _nodeRendererDefault2.default,
@@ -1693,13 +1790,14 @@
             style: {},
             innerStyle: {},
             searchQuery: null,
-            isVirtualized: !0
+            isVirtualized: !0,
+            canDrag: !0
         }, // Export the tree component without the react-dnd DragDropContext,
         // for when component is used with other components using react-dnd.
         // see: https://github.com/gaearon/react-dnd/issues/186
         exports.SortableTreeWithoutDndContext = ReactSortableTree, exports.default = (0, 
         _dragAndDropUtils.dndWrapRoot)(ReactSortableTree);
-    }, /* 8 */
+    }, /* 10 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
@@ -1713,6 +1811,24 @@
             for (var i in obj) keys.indexOf(i) >= 0 || Object.prototype.hasOwnProperty.call(obj, i) && (target[i] = obj[i]);
             return target;
         }
+        function _classCallCheck(instance, Constructor) {
+            if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
+        }
+        function _possibleConstructorReturn(self, call) {
+            if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+            return !call || "object" != typeof call && "function" != typeof call ? self : call;
+        }
+        function _inherits(subClass, superClass) {
+            if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+            subClass.prototype = Object.create(superClass && superClass.prototype, {
+                constructor: {
+                    value: subClass,
+                    enumerable: !1,
+                    writable: !0,
+                    configurable: !0
+                }
+            }), superClass && (Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass);
+        }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
@@ -1722,86 +1838,118 @@
                 for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
             }
             return target;
-        }, _react = __webpack_require__(4), _react2 = _interopRequireDefault(_react), _treeNode = __webpack_require__(19), _treeNode2 = _interopRequireDefault(_treeNode), TreeNode = function(_ref) {
-            var children = _ref.children, listIndex = _ref.listIndex, swapFrom = _ref.swapFrom, swapLength = _ref.swapLength, swapDepth = _ref.swapDepth, scaffoldBlockPxWidth = _ref.scaffoldBlockPxWidth, lowerSiblingCounts = _ref.lowerSiblingCounts, connectDropTarget = _ref.connectDropTarget, isOver = _ref.isOver, draggedNode = _ref.draggedNode, canDrop = _ref.canDrop, treeIndex = _ref.treeIndex, otherProps = (_ref.getPrevRow, 
-            _ref.node, _ref.path, _ref.maxDepth, _ref.dragHover, _objectWithoutProperties(_ref, [ "children", "listIndex", "swapFrom", "swapLength", "swapDepth", "scaffoldBlockPxWidth", "lowerSiblingCounts", "connectDropTarget", "isOver", "draggedNode", "canDrop", "treeIndex", "getPrevRow", "node", "path", "maxDepth", "dragHover" ])), scaffoldBlockCount = lowerSiblingCounts.length, scaffold = [];
-            return lowerSiblingCounts.forEach(function(lowerSiblingCount, i) {
-                var lineClass = "";
-                if (lowerSiblingCount > 0 ? // At this level in the tree, the nodes had sibling nodes further down
-                // Top-left corner of the tree
-                // +-----+
-                // |     |
-                // |  +--+
-                // |  |  |
-                // +--+--+
-                lineClass = 0 === listIndex ? _treeNode2.default.lineHalfHorizontalRight + " " + _treeNode2.default.lineHalfVerticalBottom : i === scaffoldBlockCount - 1 ? _treeNode2.default.lineHalfHorizontalRight + " " + _treeNode2.default.lineFullVertical : _treeNode2.default.lineFullVertical : 0 === listIndex ? // Top-left corner of the tree, but has no siblings
-                // +-----+
-                // |     |
-                // |  +--+
-                // |     |
-                // +-----+
-                lineClass = _treeNode2.default.lineHalfHorizontalRight : i === scaffoldBlockCount - 1 && (// The last or only node in this level of the tree
-                // +--+--+
-                // |  |  |
-                // |  +--+
-                // |     |
-                // +-----+
-                lineClass = _treeNode2.default.lineHalfVerticalTop + " " + _treeNode2.default.lineHalfHorizontalRight), 
-                scaffold.push(_react2.default.createElement("div", {
-                    key: "pre_" + i,
-                    style: {
-                        width: scaffoldBlockPxWidth
-                    },
-                    className: _treeNode2.default.lineBlock + " " + lineClass
-                })), treeIndex !== listIndex && i === swapDepth) {
-                    // This row has been shifted, and is at the depth of
-                    // the line pointing to the new destination
-                    var highlightLineClass = "";
-                    // This block is on the bottom (target) line
-                    // This block points at the target block (where the row will go when released)
-                    highlightLineClass = listIndex === swapFrom + swapLength - 1 ? _treeNode2.default.highlightBottomLeftCorner : treeIndex === swapFrom ? _treeNode2.default.highlightTopLeftCorner : _treeNode2.default.highlightLineVertical, 
-                    scaffold.push(_react2.default.createElement("div", {
-                        key: "highlight_" + i,
+        }, _createClass = function() {
+            function defineProperties(target, props) {
+                for (var i = 0; i < props.length; i++) {
+                    var descriptor = props[i];
+                    descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
+                    "value" in descriptor && (descriptor.writable = !0), Object.defineProperty(target, descriptor.key, descriptor);
+                }
+            }
+            return function(Constructor, protoProps, staticProps) {
+                return protoProps && defineProperties(Constructor.prototype, protoProps), staticProps && defineProperties(Constructor, staticProps), 
+                Constructor;
+            };
+        }(), _react = __webpack_require__(5), _react2 = _interopRequireDefault(_react), _propTypes = __webpack_require__(4), _propTypes2 = _interopRequireDefault(_propTypes), _treeNode = __webpack_require__(21), _treeNode2 = _interopRequireDefault(_treeNode), TreeNode = function(_Component) {
+            function TreeNode() {
+                return _classCallCheck(this, TreeNode), _possibleConstructorReturn(this, (TreeNode.__proto__ || Object.getPrototypeOf(TreeNode)).apply(this, arguments));
+            }
+            return _inherits(TreeNode, _Component), _createClass(TreeNode, [ {
+                key: "render",
+                value: function() {
+                    var _props = this.props, children = _props.children, listIndex = _props.listIndex, swapFrom = _props.swapFrom, swapLength = _props.swapLength, swapDepth = _props.swapDepth, scaffoldBlockPxWidth = _props.scaffoldBlockPxWidth, lowerSiblingCounts = _props.lowerSiblingCounts, connectDropTarget = _props.connectDropTarget, isOver = _props.isOver, draggedNode = _props.draggedNode, canDrop = _props.canDrop, treeIndex = _props.treeIndex, otherProps = (_props.customCanDrop, 
+                    _props.dragHover, _props.getNodeKey, _props.getPrevRow, _props.maxDepth, _props.node, 
+                    _props.path, _props.treeData, _objectWithoutProperties(_props, [ "children", "listIndex", "swapFrom", "swapLength", "swapDepth", "scaffoldBlockPxWidth", "lowerSiblingCounts", "connectDropTarget", "isOver", "draggedNode", "canDrop", "treeIndex", "customCanDrop", "dragHover", "getNodeKey", "getPrevRow", "maxDepth", "node", "path", "treeData" ])), scaffoldBlockCount = lowerSiblingCounts.length, scaffold = [];
+                    return lowerSiblingCounts.forEach(function(lowerSiblingCount, i) {
+                        var lineClass = "";
+                        if (lowerSiblingCount > 0 ? // At this level in the tree, the nodes had sibling nodes further down
+                        // Top-left corner of the tree
+                        // +-----+
+                        // |     |
+                        // |  +--+
+                        // |  |  |
+                        // +--+--+
+                        lineClass = 0 === listIndex ? _treeNode2.default.lineHalfHorizontalRight + " " + _treeNode2.default.lineHalfVerticalBottom : i === scaffoldBlockCount - 1 ? _treeNode2.default.lineHalfHorizontalRight + " " + _treeNode2.default.lineFullVertical : _treeNode2.default.lineFullVertical : 0 === listIndex ? // Top-left corner of the tree, but has no siblings
+                        // +-----+
+                        // |     |
+                        // |  +--+
+                        // |     |
+                        // +-----+
+                        lineClass = _treeNode2.default.lineHalfHorizontalRight : i === scaffoldBlockCount - 1 && (// The last or only node in this level of the tree
+                        // +--+--+
+                        // |  |  |
+                        // |  +--+
+                        // |     |
+                        // +-----+
+                        lineClass = _treeNode2.default.lineHalfVerticalTop + " " + _treeNode2.default.lineHalfHorizontalRight), 
+                        scaffold.push(_react2.default.createElement("div", {
+                            key: "pre_" + i,
+                            style: {
+                                width: scaffoldBlockPxWidth
+                            },
+                            className: _treeNode2.default.lineBlock + " " + lineClass
+                        })), treeIndex !== listIndex && i === swapDepth) {
+                            // This row has been shifted, and is at the depth of
+                            // the line pointing to the new destination
+                            var highlightLineClass = "";
+                            // This block is on the bottom (target) line
+                            // This block points at the target block (where the row will go when released)
+                            highlightLineClass = listIndex === swapFrom + swapLength - 1 ? _treeNode2.default.highlightBottomLeftCorner : treeIndex === swapFrom ? _treeNode2.default.highlightTopLeftCorner : _treeNode2.default.highlightLineVertical, 
+                            scaffold.push(_react2.default.createElement("div", {
+                                key: "highlight_" + i,
+                                style: {
+                                    width: scaffoldBlockPxWidth,
+                                    left: scaffoldBlockPxWidth * i
+                                },
+                                className: _treeNode2.default.absoluteLineBlock + " " + highlightLineClass
+                            }));
+                        }
+                    }), connectDropTarget(_react2.default.createElement("div", _extends({}, otherProps, {
+                        className: _treeNode2.default.node
+                    }), scaffold, _react2.default.createElement("div", {
+                        className: _treeNode2.default.nodeContent,
                         style: {
-                            width: scaffoldBlockPxWidth,
-                            left: scaffoldBlockPxWidth * i
-                        },
-                        className: _treeNode2.default.absoluteLineBlock + " " + highlightLineClass
-                    }));
+                            left: scaffoldBlockPxWidth * scaffoldBlockCount
+                        }
+                    }, _react.Children.map(children, function(child) {
+                        return (0, _react.cloneElement)(child, {
+                            isOver: isOver,
+                            canDrop: canDrop,
+                            draggedNode: draggedNode
+                        });
+                    }))));
                 }
-            }), connectDropTarget(_react2.default.createElement("div", _extends({}, otherProps, {
-                className: _treeNode2.default.node
-            }), scaffold, _react2.default.createElement("div", {
-                className: _treeNode2.default.nodeContent,
-                style: {
-                    left: scaffoldBlockPxWidth * scaffoldBlockCount
-                }
-            }, _react.Children.map(children, function(child) {
-                return (0, _react.cloneElement)(child, {
-                    isOver: isOver,
-                    canDrop: canDrop,
-                    draggedNode: draggedNode
-                });
-            }))));
-        };
+            } ]), TreeNode;
+        }(_react.Component);
         TreeNode.propTypes = {
-            treeIndex: _react.PropTypes.number.isRequired,
-            node: _react.PropTypes.object.isRequired,
-            path: _react.PropTypes.arrayOf(_react.PropTypes.oneOfType([ _react.PropTypes.string, _react.PropTypes.number ])).isRequired,
-            swapFrom: _react.PropTypes.number,
-            swapDepth: _react.PropTypes.number,
-            swapLength: _react.PropTypes.number,
-            scaffoldBlockPxWidth: _react.PropTypes.number.isRequired,
-            lowerSiblingCounts: _react.PropTypes.array.isRequired,
-            listIndex: _react.PropTypes.number.isRequired,
-            children: _react.PropTypes.node,
+            treeIndex: _propTypes2.default.number.isRequired,
+            node: _propTypes2.default.object.isRequired,
+            path: _propTypes2.default.arrayOf(_propTypes2.default.oneOfType([ _propTypes2.default.string, _propTypes2.default.number ])).isRequired,
+            swapFrom: _propTypes2.default.number,
+            swapDepth: _propTypes2.default.number,
+            swapLength: _propTypes2.default.number,
+            scaffoldBlockPxWidth: _propTypes2.default.number.isRequired,
+            lowerSiblingCounts: _propTypes2.default.array.isRequired,
+            listIndex: _propTypes2.default.number.isRequired,
+            children: _propTypes2.default.node,
             // Drop target
-            connectDropTarget: _react.PropTypes.func.isRequired,
-            isOver: _react.PropTypes.bool.isRequired,
-            canDrop: _react.PropTypes.bool.isRequired,
-            draggedNode: _react.PropTypes.object
+            connectDropTarget: _propTypes2.default.func.isRequired,
+            isOver: _propTypes2.default.bool.isRequired,
+            canDrop: _propTypes2.default.bool,
+            draggedNode: _propTypes2.default.object,
+            customCanDrop: _propTypes2.default.func,
+            // used in drag-and-drop-utils
+            dragHover: _propTypes2.default.func.isRequired,
+            // used in drag-and-drop-utils
+            getNodeKey: _propTypes2.default.func,
+            // used in drag-and-drop-utils
+            getPrevRow: _propTypes2.default.func,
+            // used in drag-and-drop-utils
+            maxDepth: _propTypes2.default.number,
+            // used in drag-and-drop-utils
+            treeData: _propTypes2.default.arrayOf(_propTypes2.default.object)
         }, exports.default = TreeNode;
-    }, /* 9 */
+    }, /* 11 */
     /***/
     function(module, exports) {
         "use strict";
@@ -1817,7 +1965,7 @@
         Object.defineProperty(exports, "__esModule", {
             value: !0
         }), exports.getIEVersion = getIEVersion;
-    }, /* 10 */
+    }, /* 12 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
@@ -1839,19 +1987,38 @@
             return targetDepth;
         }
         function canDrop(dropTargetProps, monitor) {
-            var isHover = arguments.length > 2 && void 0 !== arguments[2] && arguments[2], abovePath = [], aboveNode = {}, rowAbove = dropTargetProps.getPrevRow();
-            rowAbove && (abovePath = rowAbove.path, aboveNode = rowAbove.node);
-            var targetDepth = getTargetDepth(dropTargetProps, monitor), draggedNode = monitor.getItem().node;
-            // Either we're not adding to the children of the row above...
-            // ...or we guarantee it's not a function we're trying to add to
-            // ...unless it's at a different level than the current one
-            return !(!(targetDepth < abovePath.length || "function" != typeof aboveNode.children) || dropTargetProps.node === draggedNode && isHover === !0 && targetDepth === dropTargetProps.path.length - 1);
+            if (!monitor.isOver()) return !1;
+            var rowAbove = dropTargetProps.getPrevRow(), abovePath = rowAbove ? rowAbove.path : [], aboveNode = rowAbove ? rowAbove.node : {}, targetDepth = getTargetDepth(dropTargetProps, monitor);
+            // Cannot drop if we're adding to the children of the row above and
+            //  the row above is a function
+            if (targetDepth >= abovePath.length && "function" == typeof aboveNode.children) return !1;
+            if ("function" == typeof dropTargetProps.customCanDrop) {
+                var node = monitor.getItem().node, addedResult = (0, _memoizedTreeDataUtils.memoizedInsertNode)({
+                    treeData: dropTargetProps.treeData,
+                    newNode: node,
+                    depth: targetDepth,
+                    getNodeKey: dropTargetProps.getNodeKey,
+                    minimumTreeIndex: dropTargetProps.listIndex,
+                    expandParent: !0
+                });
+                return dropTargetProps.customCanDrop({
+                    node: node,
+                    prevPath: monitor.getItem().path,
+                    prevParent: monitor.getItem().parentNode,
+                    prevTreeIndex: monitor.getItem().treeIndex,
+                    nextPath: addedResult.path,
+                    nextParent: addedResult.parentNode,
+                    nextTreeIndex: addedResult.treeIndex
+                });
+            }
+            return !0;
         }
         function nodeDragSourcePropInjection(connect, monitor) {
             return {
                 connectDragSource: connect.dragSource(),
                 connectDragPreview: connect.dragPreview(),
-                isDragging: monitor.isDragging()
+                isDragging: monitor.isDragging(),
+                didDrop: monitor.didDrop()
             };
         }
         function nodeDropTargetPropInjection(connect, monitor) {
@@ -1876,11 +2043,13 @@
             value: !0
         }), exports.dndWrapSource = dndWrapSource, exports.dndWrapTarget = dndWrapTarget, 
         exports.dndWrapRoot = dndWrapRoot;
-        var _reactDnd = __webpack_require__(21), _reactDndHtml5Backend = __webpack_require__(22), _reactDndHtml5Backend2 = _interopRequireDefault(_reactDndHtml5Backend), _treeDataUtils = __webpack_require__(1), nodeDragSource = {
+        var _reactDnd = __webpack_require__(23), _reactDndHtml5Backend = __webpack_require__(24), _reactDndHtml5Backend2 = _interopRequireDefault(_reactDndHtml5Backend), _treeDataUtils = __webpack_require__(1), _memoizedTreeDataUtils = __webpack_require__(7), nodeDragSource = {
             beginDrag: function(props) {
                 return props.startDrag(props), {
                     node: props.node,
-                    path: props.path
+                    parentNode: props.parentNode,
+                    path: props.path,
+                    treeIndex: props.treeIndex
                 };
             },
             endDrag: function(props, monitor) {
@@ -1900,16 +2069,19 @@
                 };
             },
             hover: function(dropTargetProps, monitor) {
-                canDrop(dropTargetProps, monitor, !0) && dropTargetProps.dragHover({
-                    node: monitor.getItem().node,
+                var targetDepth = getTargetDepth(dropTargetProps, monitor), draggedNode = monitor.getItem().node, needsRedraw = // Redraw if hovered above different nodes
+                dropTargetProps.node !== draggedNode || // Or hovered above the same node but at a different depth
+                targetDepth !== dropTargetProps.path.length - 1;
+                needsRedraw && dropTargetProps.dragHover({
+                    node: draggedNode,
                     path: monitor.getItem().path,
                     minimumTreeIndex: dropTargetProps.listIndex,
-                    depth: getTargetDepth(dropTargetProps, monitor)
+                    depth: targetDepth
                 });
             },
             canDrop: canDrop
         };
-    }, /* 11 */
+    }, /* 13 */
     /***/
     function(module, exports) {
         "use strict";
@@ -1927,18 +2099,18 @@
         Object.defineProperty(exports, "__esModule", {
             value: !0
         }), exports.swapRows = swapRows;
-    }, /* 12 */
+    }, /* 14 */
     /***/
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
         // module
         exports.push([ module.id, ".ReactVirtualized__Table__headerRow{font-weight:700;text-transform:uppercase}.ReactVirtualized__Table__headerRow,.ReactVirtualized__Table__row{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.ReactVirtualized__Table__headerTruncatedText{display:inline-block;max-width:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.ReactVirtualized__Table__headerColumn,.ReactVirtualized__Table__rowColumn{margin-right:10px;min-width:0}.ReactVirtualized__Table__rowColumn{text-overflow:ellipsis;white-space:nowrap}.ReactVirtualized__Table__headerColumn:first-of-type,.ReactVirtualized__Table__rowColumn:first-of-type{margin-left:10px}.ReactVirtualized__Table__sortableHeaderColumn{cursor:pointer}.ReactVirtualized__Table__sortableHeaderIconContainer{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.ReactVirtualized__Table__sortableHeaderIcon{-webkit-box-flex:0;-ms-flex:0 0 24px;flex:0 0 24px;height:1em;width:1em;fill:currentColor}", "" ]);
-    }, /* 13 */
+    }, /* 15 */
     /***/
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
         // module
-        exports.push([ module.id, '.rst__rowWrapper{padding:10px 10px 10px 0;height:100%;box-sizing:border-box}.rst__row{height:100%;white-space:nowrap;display:-webkit-box;display:-ms-flexbox;display:flex}.rst__row>*{box-sizing:border-box}.rst__rowCancelPad,.rst__rowLandingPad{border:none!important;box-shadow:none!important;outline:none!important}.rst__rowCancelPad *,.rst__rowLandingPad *{opacity:0!important}.rst__rowCancelPad:before,.rst__rowLandingPad:before{background-color:#add8e6;border:3px dashed #fff;content:"";position:absolute;top:0;right:0;bottom:0;left:0;z-index:-1}.rst__rowCancelPad:before{background-color:#e6a8ad}.rst__rowSearchMatch{outline:3px solid #0080ff}.rst__rowSearchFocus{outline:3px solid #fc6421}.rst__loadingHandle,.rst__moveHandle,.rst__rowContents,.rst__rowLabel,.rst__rowLabel_NoFlex,.rst__rowToolbar,.rst__rowToolbar_NoFlex,.rst__toolbarButton{display:inline-block;vertical-align:middle}.rst__rowContents{position:relative;height:100%;border:1px solid #bbb;border-left:none;box-shadow:0 2px 2px -2px;padding:0 5px 0 10px;border-radius:2px;min-width:230px;-webkit-box-flex:1;-ms-flex:1 0 auto;flex:1 0 auto;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;background-color:#fff}.rst__rowLabel{padding-right:20px}.rst__rowLabel,.rst__rowToolbar{-webkit-box-flex:0;-ms-flex:0 1 auto;flex:0 1 auto}.rst__rowToolbar{display:-webkit-box;display:-ms-flexbox;display:flex}.rst__loadingHandle,.rst__moveHandle{height:100%;width:44px;background:#d9d9d9 url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI0MiI+PGcgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjIuOSIgPjxwYXRoIGQ9Ik0xNCAxNS43aDE0LjQiLz48cGF0aCBkPSJNMTQgMjEuNGgxNC40Ii8+PHBhdGggZD0iTTE0IDI3LjFoMTQuNCIvPjwvZz4KPC9zdmc+") no-repeat 50%;border:1px solid #aaa;box-shadow:0 2px 2px -2px;cursor:move;border-radius:1px;z-index:1}.rst__loadingHandle{cursor:default;background:#d9d9d9}@-webkit-keyframes rst__pointFade{0%,19.999%,to{opacity:0}20%{opacity:1}}@keyframes rst__pointFade{0%,19.999%,to{opacity:0}20%{opacity:1}}.rst__loadingCircle{width:80%;height:80%;margin:10%;position:relative}.rst__loadingCirclePoint{width:100%;height:100%;position:absolute;left:0;top:0}.rst__loadingCirclePoint:before{content:"";display:block;margin:0 auto;width:11%;height:30%;background-color:#fff;border-radius:30%;-webkit-animation:rst__pointFade .8s infinite ease-in-out both;animation:rst__pointFade .8s infinite ease-in-out both}.rst__loadingCirclePoint:first-of-type{-webkit-transform:rotate(0deg);-ms-transform:rotate(0deg);transform:rotate(0deg)}.rst__loadingCirclePoint:first-of-type:before,.rst__loadingCirclePoint:nth-of-type(7):before{-webkit-animation-delay:-.8s;animation-delay:-.8s}.rst__loadingCirclePoint:nth-of-type(2){-webkit-transform:rotate(30deg);-ms-transform:rotate(30deg);transform:rotate(30deg)}.rst__loadingCirclePoint:nth-of-type(8){-webkit-transform:rotate(210deg);-ms-transform:rotate(210deg);transform:rotate(210deg)}.rst__loadingCirclePoint:nth-of-type(2):before,.rst__loadingCirclePoint:nth-of-type(8):before{-webkit-animation-delay:-666.66667ms;animation-delay:-666.66667ms}.rst__loadingCirclePoint:nth-of-type(3){-webkit-transform:rotate(60deg);-ms-transform:rotate(60deg);transform:rotate(60deg)}.rst__loadingCirclePoint:nth-of-type(9){-webkit-transform:rotate(240deg);-ms-transform:rotate(240deg);transform:rotate(240deg)}.rst__loadingCirclePoint:nth-of-type(3):before,.rst__loadingCirclePoint:nth-of-type(9):before{-webkit-animation-delay:-.53333333s;animation-delay:-.53333333s}.rst__loadingCirclePoint:nth-of-type(4){-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.rst__loadingCirclePoint:nth-of-type(10){-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.rst__loadingCirclePoint:nth-of-type(4):before,.rst__loadingCirclePoint:nth-of-type(10):before{-webkit-animation-delay:-.4s;animation-delay:-.4s}.rst__loadingCirclePoint:nth-of-type(5){-webkit-transform:rotate(120deg);-ms-transform:rotate(120deg);transform:rotate(120deg)}.rst__loadingCirclePoint:nth-of-type(11){-webkit-transform:rotate(300deg);-ms-transform:rotate(300deg);transform:rotate(300deg)}.rst__loadingCirclePoint:nth-of-type(5):before,.rst__loadingCirclePoint:nth-of-type(11):before{-webkit-animation-delay:-.26666667s;animation-delay:-.26666667s}.rst__loadingCirclePoint:nth-of-type(6){-webkit-transform:rotate(150deg);-ms-transform:rotate(150deg);transform:rotate(150deg)}.rst__loadingCirclePoint:nth-of-type(12){-webkit-transform:rotate(330deg);-ms-transform:rotate(330deg);transform:rotate(330deg)}.rst__loadingCirclePoint:nth-of-type(6):before,.rst__loadingCirclePoint:nth-of-type(12):before{-webkit-animation-delay:-.13333333s;animation-delay:-.13333333s}.rst__loadingCirclePoint:nth-of-type(7){-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.rst__loadingCirclePoint:nth-of-type(13){-webkit-transform:rotate(1turn);-ms-transform:rotate(1turn);transform:rotate(1turn)}.rst__loadingCirclePoint:nth-of-type(7):before,.rst__loadingCirclePoint:nth-of-type(13):before{-webkit-animation-delay:0ms;animation-delay:0ms}.rst__rowTitle{font-weight:700}.rst__rowTitleWithSubtitle{font-size:85%;display:block;height:.8rem}.rst__rowSubtitle{font-size:70%;line-height:1}.rst__collapseButton,.rst__expandButton{-webkit-appearance:none;-moz-appearance:none;appearance:none;border:none;position:absolute;border-radius:100%;box-shadow:0 0 0 1px #000;width:16px;height:16px;top:50%;-webkit-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);transform:translate(-50%,-50%);cursor:pointer}.rst__collapseButton:focus,.rst__expandButton:focus{outline:none;box-shadow:0 0 0 1px #000,0 0 1px 3px #83bef9}.rst__collapseButton:hover:not(:active),.rst__expandButton:hover:not(:active){background-size:24px;height:20px;width:20px}.rst__collapseButton{background:#fff url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCI+PGNpcmNsZSBjeD0iOSIgY3k9IjkiIHI9IjgiIGZpbGw9IiNGRkYiLz48ZyBzdHJva2U9IiM5ODk4OTgiIHN0cm9rZS13aWR0aD0iMS45IiA+PHBhdGggZD0iTTQuNSA5aDkiLz48L2c+Cjwvc3ZnPg==") no-repeat 50%}.rst__expandButton{background:#fff url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCI+PGNpcmNsZSBjeD0iOSIgY3k9IjkiIHI9IjgiIGZpbGw9IiNGRkYiLz48ZyBzdHJva2U9IiM5ODk4OTgiIHN0cm9rZS13aWR0aD0iMS45IiA+PHBhdGggZD0iTTQuNSA5aDkiLz48cGF0aCBkPSJNOSA0LjV2OSIvPjwvZz4KPC9zdmc+") no-repeat 50%}.rst__row_NoFlex:before,.rst__rowContents_NoFlex:before{content:"";display:inline-block;vertical-align:middle;height:100%}.rst__rowContents_NoFlex{display:inline-block}.rst__rowContents_NoFlex:after{content:"";display:inline-block;width:100%}.rst__rowLabel_NoFlex{width:50%}.rst__rowToolbar_NoFlex{text-align:right;width:50%}.rst__lineChildren{height:100%;display:inline-block;position:absolute}.rst__lineChildren:after{content:"";position:absolute;background-color:#000;width:1px;left:50%;bottom:0;height:10px}', "" ]), 
+        exports.push([ module.id, '.rst__rowWrapper{padding:10px 10px 10px 0;height:100%;box-sizing:border-box}.rst__row{height:100%;white-space:nowrap;display:-webkit-box;display:-ms-flexbox;display:flex}.rst__row>*{box-sizing:border-box}.rst__rowCancelPad,.rst__rowLandingPad{border:none!important;box-shadow:none!important;outline:none!important}.rst__rowCancelPad *,.rst__rowLandingPad *{opacity:0!important}.rst__rowCancelPad:before,.rst__rowLandingPad:before{background-color:#add8e6;border:3px dashed #fff;content:"";position:absolute;top:0;right:0;bottom:0;left:0;z-index:-1}.rst__rowCancelPad:before{background-color:#e6a8ad}.rst__rowSearchMatch{outline:3px solid #0080ff}.rst__rowSearchFocus{outline:3px solid #fc6421}.rst__loadingHandle,.rst__moveHandle,.rst__rowContents,.rst__rowLabel,.rst__rowLabel_NoFlex,.rst__rowToolbar,.rst__rowToolbar_NoFlex,.rst__toolbarButton{display:inline-block;vertical-align:middle}.rst__rowContents{position:relative;height:100%;border:1px solid #bbb;border-left:none;box-shadow:0 2px 2px -2px;padding:0 5px 0 10px;border-radius:2px;min-width:230px;-webkit-box-flex:1;-ms-flex:1 0 auto;flex:1 0 auto;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;background-color:#fff}.rst__rowContentsDragDisabled{border-left:1px solid #bbb}.rst__rowLabel{padding-right:20px}.rst__rowLabel,.rst__rowToolbar{-webkit-box-flex:0;-ms-flex:0 1 auto;flex:0 1 auto}.rst__rowToolbar{display:-webkit-box;display:-ms-flexbox;display:flex}.rst__loadingHandle,.rst__moveHandle{height:100%;width:44px;background:#d9d9d9 url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI0MiI+PGcgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjIuOSIgPjxwYXRoIGQ9Ik0xNCAxNS43aDE0LjQiLz48cGF0aCBkPSJNMTQgMjEuNGgxNC40Ii8+PHBhdGggZD0iTTE0IDI3LjFoMTQuNCIvPjwvZz4KPC9zdmc+") no-repeat 50%;border:1px solid #aaa;box-shadow:0 2px 2px -2px;cursor:move;border-radius:1px;z-index:1}.rst__loadingHandle{cursor:default;background:#d9d9d9}@-webkit-keyframes rst__pointFade{0%,19.999%,to{opacity:0}20%{opacity:1}}@keyframes rst__pointFade{0%,19.999%,to{opacity:0}20%{opacity:1}}.rst__loadingCircle{width:80%;height:80%;margin:10%;position:relative}.rst__loadingCirclePoint{width:100%;height:100%;position:absolute;left:0;top:0}.rst__loadingCirclePoint:before{content:"";display:block;margin:0 auto;width:11%;height:30%;background-color:#fff;border-radius:30%;-webkit-animation:rst__pointFade .8s infinite ease-in-out both;animation:rst__pointFade .8s infinite ease-in-out both}.rst__loadingCirclePoint:first-of-type{-webkit-transform:rotate(0deg);-ms-transform:rotate(0deg);transform:rotate(0deg)}.rst__loadingCirclePoint:first-of-type:before,.rst__loadingCirclePoint:nth-of-type(7):before{-webkit-animation-delay:-.8s;animation-delay:-.8s}.rst__loadingCirclePoint:nth-of-type(2){-webkit-transform:rotate(30deg);-ms-transform:rotate(30deg);transform:rotate(30deg)}.rst__loadingCirclePoint:nth-of-type(8){-webkit-transform:rotate(210deg);-ms-transform:rotate(210deg);transform:rotate(210deg)}.rst__loadingCirclePoint:nth-of-type(2):before,.rst__loadingCirclePoint:nth-of-type(8):before{-webkit-animation-delay:-666.66667ms;animation-delay:-666.66667ms}.rst__loadingCirclePoint:nth-of-type(3){-webkit-transform:rotate(60deg);-ms-transform:rotate(60deg);transform:rotate(60deg)}.rst__loadingCirclePoint:nth-of-type(9){-webkit-transform:rotate(240deg);-ms-transform:rotate(240deg);transform:rotate(240deg)}.rst__loadingCirclePoint:nth-of-type(3):before,.rst__loadingCirclePoint:nth-of-type(9):before{-webkit-animation-delay:-.53333333s;animation-delay:-.53333333s}.rst__loadingCirclePoint:nth-of-type(4){-webkit-transform:rotate(90deg);-ms-transform:rotate(90deg);transform:rotate(90deg)}.rst__loadingCirclePoint:nth-of-type(10){-webkit-transform:rotate(270deg);-ms-transform:rotate(270deg);transform:rotate(270deg)}.rst__loadingCirclePoint:nth-of-type(4):before,.rst__loadingCirclePoint:nth-of-type(10):before{-webkit-animation-delay:-.4s;animation-delay:-.4s}.rst__loadingCirclePoint:nth-of-type(5){-webkit-transform:rotate(120deg);-ms-transform:rotate(120deg);transform:rotate(120deg)}.rst__loadingCirclePoint:nth-of-type(11){-webkit-transform:rotate(300deg);-ms-transform:rotate(300deg);transform:rotate(300deg)}.rst__loadingCirclePoint:nth-of-type(5):before,.rst__loadingCirclePoint:nth-of-type(11):before{-webkit-animation-delay:-.26666667s;animation-delay:-.26666667s}.rst__loadingCirclePoint:nth-of-type(6){-webkit-transform:rotate(150deg);-ms-transform:rotate(150deg);transform:rotate(150deg)}.rst__loadingCirclePoint:nth-of-type(12){-webkit-transform:rotate(330deg);-ms-transform:rotate(330deg);transform:rotate(330deg)}.rst__loadingCirclePoint:nth-of-type(6):before,.rst__loadingCirclePoint:nth-of-type(12):before{-webkit-animation-delay:-.13333333s;animation-delay:-.13333333s}.rst__loadingCirclePoint:nth-of-type(7){-webkit-transform:rotate(180deg);-ms-transform:rotate(180deg);transform:rotate(180deg)}.rst__loadingCirclePoint:nth-of-type(13){-webkit-transform:rotate(1turn);-ms-transform:rotate(1turn);transform:rotate(1turn)}.rst__loadingCirclePoint:nth-of-type(7):before,.rst__loadingCirclePoint:nth-of-type(13):before{-webkit-animation-delay:0ms;animation-delay:0ms}.rst__rowTitle{font-weight:700}.rst__rowTitleWithSubtitle{font-size:85%;display:block;height:.8rem}.rst__rowSubtitle{font-size:70%;line-height:1}.rst__collapseButton,.rst__expandButton{-webkit-appearance:none;-moz-appearance:none;appearance:none;border:none;position:absolute;border-radius:100%;box-shadow:0 0 0 1px #000;width:16px;height:16px;top:50%;-webkit-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);transform:translate(-50%,-50%);cursor:pointer}.rst__collapseButton:focus,.rst__expandButton:focus{outline:none;box-shadow:0 0 0 1px #000,0 0 1px 3px #83bef9}.rst__collapseButton:hover:not(:active),.rst__expandButton:hover:not(:active){background-size:24px;height:20px;width:20px}.rst__collapseButton{background:#fff url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCI+PGNpcmNsZSBjeD0iOSIgY3k9IjkiIHI9IjgiIGZpbGw9IiNGRkYiLz48ZyBzdHJva2U9IiM5ODk4OTgiIHN0cm9rZS13aWR0aD0iMS45IiA+PHBhdGggZD0iTTQuNSA5aDkiLz48L2c+Cjwvc3ZnPg==") no-repeat 50%}.rst__expandButton{background:#fff url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCI+PGNpcmNsZSBjeD0iOSIgY3k9IjkiIHI9IjgiIGZpbGw9IiNGRkYiLz48ZyBzdHJva2U9IiM5ODk4OTgiIHN0cm9rZS13aWR0aD0iMS45IiA+PHBhdGggZD0iTTQuNSA5aDkiLz48cGF0aCBkPSJNOSA0LjV2OSIvPjwvZz4KPC9zdmc+") no-repeat 50%}.rst__row_NoFlex:before,.rst__rowContents_NoFlex:before{content:"";display:inline-block;vertical-align:middle;height:100%}.rst__rowContents_NoFlex{display:inline-block}.rst__rowContents_NoFlex:after{content:"";display:inline-block;width:100%}.rst__rowLabel_NoFlex{width:50%}.rst__rowToolbar_NoFlex{text-align:right;width:50%}.rst__lineChildren{height:100%;display:inline-block;position:absolute}.rst__lineChildren:after{content:"";position:absolute;background-color:#000;width:1px;left:50%;bottom:0;height:10px}', "" ]), 
         // exports
         exports.locals = {
             rowWrapper: "rst__rowWrapper",
@@ -1955,6 +2127,7 @@
             toolbarButton: "rst__toolbarButton",
             rowLabel_NoFlex: "rst__rowLabel_NoFlex",
             rowToolbar_NoFlex: "rst__rowToolbar_NoFlex",
+            rowContentsDragDisabled: "rst__rowContentsDragDisabled",
             loadingCircle: "rst__loadingCircle",
             loadingCirclePoint: "rst__loadingCirclePoint",
             pointFade: "rst__pointFade",
@@ -1967,18 +2140,18 @@
             rowContents_NoFlex: "rst__rowContents_NoFlex",
             lineChildren: "rst__lineChildren"
         };
-    }, /* 14 */
+    }, /* 16 */
     /***/
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
         // module
-        exports.push([ module.id, ".rst__tree{/*! This comment keeps Sass from deleting the empty rule */}.rst__virtualScrollOverride *{box-sizing:border-box}.ReactVirtualized__Grid__innerScrollContainer{overflow:visible}.ReactVirtualized__Grid{outline:none}", "" ]), 
+        exports.push([ module.id, ".rst__tree{/*! This comment keeps Sass from deleting the empty rule */}.rst__virtualScrollOverride *{box-sizing:border-box}.ReactVirtualized__Grid__innerScrollContainer{overflow:visible!important}.ReactVirtualized__Grid{outline:none}", "" ]), 
         // exports
         exports.locals = {
             tree: "rst__tree",
             virtualScrollOverride: "rst__virtualScrollOverride"
         };
-    }, /* 15 */
+    }, /* 17 */
     /***/
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
@@ -1999,30 +2172,6 @@
             highlightTopLeftCorner: "rst__highlightTopLeftCorner",
             highlightBottomLeftCorner: "rst__highlightBottomLeftCorner"
         };
-    }, /* 16 */
-    /***/
-    function(module, exports, __webpack_require__) {
-        // style-loader: Adds some css to the DOM by adding a <style> tag
-        // load the styles
-        var content = __webpack_require__(12);
-        "string" == typeof content && (content = [ [ module.id, content, "" ] ]);
-        // add the styles to the DOM
-        __webpack_require__(3)(content, {
-            insertAt: "top"
-        });
-        content.locals && (module.exports = content.locals);
-    }, /* 17 */
-    /***/
-    function(module, exports, __webpack_require__) {
-        // style-loader: Adds some css to the DOM by adding a <style> tag
-        // load the styles
-        var content = __webpack_require__(13);
-        "string" == typeof content && (content = [ [ module.id, content, "" ] ]);
-        // add the styles to the DOM
-        __webpack_require__(3)(content, {
-            insertAt: "top"
-        });
-        content.locals && (module.exports = content.locals);
     }, /* 18 */
     /***/
     function(module, exports, __webpack_require__) {
@@ -2049,12 +2198,28 @@
         content.locals && (module.exports = content.locals);
     }, /* 20 */
     /***/
-    function(module, exports) {
-        module.exports = __WEBPACK_EXTERNAL_MODULE_20__;
+    function(module, exports, __webpack_require__) {
+        // style-loader: Adds some css to the DOM by adding a <style> tag
+        // load the styles
+        var content = __webpack_require__(16);
+        "string" == typeof content && (content = [ [ module.id, content, "" ] ]);
+        // add the styles to the DOM
+        __webpack_require__(3)(content, {
+            insertAt: "top"
+        });
+        content.locals && (module.exports = content.locals);
     }, /* 21 */
     /***/
-    function(module, exports) {
-        module.exports = __WEBPACK_EXTERNAL_MODULE_21__;
+    function(module, exports, __webpack_require__) {
+        // style-loader: Adds some css to the DOM by adding a <style> tag
+        // load the styles
+        var content = __webpack_require__(17);
+        "string" == typeof content && (content = [ [ module.id, content, "" ] ]);
+        // add the styles to the DOM
+        __webpack_require__(3)(content, {
+            insertAt: "top"
+        });
+        content.locals && (module.exports = content.locals);
     }, /* 22 */
     /***/
     function(module, exports) {
@@ -2067,6 +2232,14 @@
     /***/
     function(module, exports) {
         module.exports = __WEBPACK_EXTERNAL_MODULE_24__;
+    }, /* 25 */
+    /***/
+    function(module, exports) {
+        module.exports = __WEBPACK_EXTERNAL_MODULE_25__;
+    }, /* 26 */
+    /***/
+    function(module, exports) {
+        module.exports = __WEBPACK_EXTERNAL_MODULE_26__;
     } ]);
 });
 //# sourceMappingURL=react-sortable-tree.js.map
