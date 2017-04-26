@@ -7,7 +7,10 @@ import '../shared/favicon/favicon-16x16.png';
 import '../shared/favicon/favicon-32x32.png';
 import '../shared/favicon/favicon.ico';
 import '../shared/favicon/safari-pinned-tab.svg';
-import {addNodeUnderParent, getNodeAtPath} from "../../utils/tree-data-utils";
+import {replaceNodeWithNew, walk, map} from '../../utils/tree-data-utils';
+import Button from 'react-toolbox/lib/button/Button';
+import Dropdown from 'react-simple-dropdown';
+import { DropdownTrigger, DropdownContent } from 'react-simple-dropdown';
 
 const maxDepth = 5;
 
@@ -21,13 +24,17 @@ class App extends Component {
             searchString: '',
             searchFocusIndex: 0,
             searchFoundCount: null,
+            activeNodeCopied: false,
+            actualNodeSelected: false,
             treeData: [
                 {
                     id: 1,
                     title: 'Pistoia',
                     subtitle: 'Piccolo Comune',
-                    complete: false,
-                    expanded: true,
+                    tipo: 'ramo',
+                    incomplete: false,
+                    notMovable: true,
+                    expanded: false,
                     children: [
                         {
                             id: 11,
@@ -51,7 +58,8 @@ class App extends Component {
                 },
                 {
                     id: 2,
-                    expanded: true,
+                    expanded: false,
+                    incomplete: true,
                     title: 'Prato',
                     children: [
                         {
@@ -172,7 +180,7 @@ class App extends Component {
     }
 
     updateTreeData(treeData) {
-        console.log('updateTreeData', treeData);
+        //  console.log('updateTreeData', treeData);
         this.setState({ treeData });
     }
 
@@ -194,46 +202,194 @@ class App extends Component {
     }
 
     getResultTree() {
-        this.getResultTree(false);
+        //this.getResultTree(false);
     }
 
     replaceChildrenIntoNode(nodeInfo) {
-        let tempObj = {
-                id: 9999,
-                title: (
-                    <div>
-                        <div
-                            style={{
-                                backgroundColor: 'gray',
-                                display: 'inline-block',
-                                borderRadius: 10,
-                                color: '#FFF',
-                                padding: '0 5px',
-                            }}
-                        >
-                            Neww Component
-                        </div>
+        const tempObj = {
+            id: 9999,
+            title: (
+                <div>
+                    <div
+                        style={{
+                            backgroundColor: 'gray',
+                            display: 'inline-block',
+                            borderRadius: 10,
+                            color: '#FFF',
+                            padding: '0 5px',
+                        }}
+                    >
+                        Neww Component
                     </div>
-                ),
-            };
+                </div>
+            ),
+            children: [
+                {
+                    id: 52113,
+                    expanded: true,
+                    title: 'Prova',
+                    children: [
+                        {
+                            id: 52111,
+                            title: 'Prova 2'
+                        }
+                    ],
+                },{
+                    id: 521123,
+                    title: ({ path }) => (path.length >= maxDepth ?
+                            'This cannot be dragged deeper' :
+                            'This can be dragged deeper'
+                    ),
+                }
+            ]
+        };
 
-        console.log("asd" , nodeInfo.node.id);
+        let key = nodeInfo.path || null;
 
-        let newTree = addNodeUnderParent({
+        if (!nodeInfo.path[nodeInfo.path.length - 2]) {
+            key = null;
+        } else {
+            key = nodeInfo.path[nodeInfo.path.length - 2];
+        }
+
+        const newTree = replaceNodeWithNew({
             treeData: this.state.treeData,
             newNode: tempObj,
-            parentKey: nodeInfo.node.id,
+            parentKey: key,
+            expandParent: true,
             getNodeKey: ({ node }) => node.id
         });
 
         this.setState({
             treeData: newTree.treeData
         });
-    };
+    }
 
-    addChildrenToNode(nodeInfo) {
-        console.log('addChildrenToNode', nodeInfo);
-    };
+    recreateTree(newTree) {
+        let treeData = newTree.treeData,
+            tree = map({
+                treeData,
+                callback: ({node}) => node.id,
+                getNodeKey: ({node}) => {
+                    console.log('walk', node);
+                    return {...node};
+                },
+                ignoreCollapsed: false,
+            });
+
+        this.setState({
+            treeData: newTree.treeData
+        });
+    }
+
+    /**
+     * Setto la proprietà dello stato "activeNodeCopied"
+     *
+     * @param nodeInfo
+     */
+    copyNode(nodeInfo) {
+        this.setState({
+            activeNodeCopied: nodeInfo
+        });
+    }
+
+    /**
+     * Incollo il nodo che si trova in this.state.activeNodeCopied come figlio
+     *
+     * @param nodeInfo
+     */
+    pasteNodeAsChild(nodeInfo) {
+        const tempObj = this.state.activeNodeCopied;
+
+        let key = nodeInfo.path || null;
+
+        const newTree = replaceNodeWithNew({
+                treeData: this.state.treeData,
+                newNode: tempObj.node,
+                parentKey: nodeInfo.node.id,
+                expandParent: true,
+                getNodeKey: ({ node }) => node.id
+            });
+
+        this.setState({
+            treeData: newTree.treeData
+        });
+
+        //this.recreateTree(newTree);
+    }
+
+    /**
+     * Incollo il nodo che si trova in this.state.activeNodeCopied come fratello
+     * e quindi allo stesso livello
+     *
+     * @param nodeInfo
+     */
+    pasteNodeAsSibling(nodeInfo) {
+        const tempObj = this.state.activeNodeCopied;
+
+        let key = nodeInfo.path || null;
+
+        const newTree = replaceNodeWithNew({
+            treeData: this.state.treeData,
+            newNode: tempObj.node,
+            parentKey: nodeInfo.node.id,
+            expandParent: true,
+            getNodeKey: ({ node }) => node.id
+        });
+
+        this.setState({
+            treeData: newTree.treeData
+        });
+
+        //this.recreateTree(newTree);
+    }
+
+    /**
+     * Inserisco un nuovo figlio aprendo un modal
+     *
+     * @param nodeInfo
+     */
+    insertNodeAsChild(nodeInfo) {
+        console.log('insertNodeAsChild');
+    }
+
+    /**
+     * Inserisco un nuovo fratello aprendo un modal
+     *
+     * @param nodeInfo
+     */
+    insertNodeAsSibling(nodeInfo) {
+        console.log('insertNodeAsSibling');
+    }
+
+    /**
+     * Setta nello state il nodo selezionato
+     * mettendo dentro "actualNodeSelected" l'oggetto
+     * @param nodeInfo
+     */
+    selectNode(nodeInfo) {
+        this.setState({
+            actualNodeSelected: nodeInfo
+        });
+    }
+
+    /**
+     * Quando espando un nodo controllo la proprietà incomplete
+     * Se non è settata oppure è settata a false carico semplicemente il nodo
+     * Se è settata a true devo fare una chiamata ajax
+     *
+     * @param node
+     * @param expanded
+     */
+    expandNode(node, expanded) {
+        let incomplete = node.incomplete || false;
+
+        if( expanded && incomplete ){
+            console.log('faccio chiamata ajax');
+        }else{
+            console.log('apro il pannello e basta');
+        }
+    }
 
     render() {
         const projectName = 'React Sortable Tree';
@@ -251,8 +407,7 @@ class App extends Component {
         const alertNodeInfo = ({
             node,
             path,
-            treeIndex,
-            lowerSiblingCounts
+            treeIndex
         }) => {
             const objectString = Object.keys(node)
                 .map(k => (k === 'children' ? 'children: Array' : `${k}: '${node[k]}'`))
@@ -363,14 +518,14 @@ class App extends Component {
                                     'path:', path,
                                 )
                             }
-                            getNodeKey={({ node, treeIndex }) => {
-                                console.log(node.id);
+                            getNodeKey={({ node }) => {
                                 return node.id;
                             }}
-                            onVisibilityToggle={({ treeData, node, expanded }) => {
-                                // Nel nostro funzionamento: quando clicco e il nodo è "incompleto" faccio
-                                // una chimata ajax che mi riempie il nodo e lo mostro
-                                console.log('onVisibilityToggle', treeData, node, expanded);
+                            onVisibilityToggle={({node, expanded}) => {
+                                this.expandNode(node, expanded);
+                                //  Nel nostro funzionamento: quando clicco e il nodo è "incompleto" faccio
+                                //  una chimata ajax che mi riempie il nodo e lo mostro
+                                //  console.log('onVisibilityToggle', treeData, node, expanded);
                             }}
                             searchQuery={searchString}
                             searchFocusOffset={searchFocusIndex}
@@ -383,21 +538,106 @@ class App extends Component {
                             isVirtualized={isVirtualized}
                             generateNodeProps={rowInfo => ({
                                 buttons: [
+                                    <Dropdown className="account-dropdown">
+                                        <DropdownTrigger>Action</DropdownTrigger>
+                                        <DropdownContent>
+                                            <ul>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.replaceChildrenIntoNode(rowInfo))}
+                                                    >
+                                                        Replace children
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.copyNode(rowInfo))}
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.pasteNodeAsChild(rowInfo))}
+                                                    >
+                                                        Paste as Child
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.pasteNodeAsSibling(rowInfo))}
+                                                    >
+                                                        Paste as Sibling
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.insertNodeAsChild(rowInfo))}
+                                                    >
+                                                        Insert as Child
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => (this.insertNodeAsSibling(rowInfo))}
+                                                    >
+                                                        insert as Sibling
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                        }}
+                                                        onClick={() => alertNodeInfo(rowInfo)}
+                                                    >
+                                                        ℹ
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </DropdownContent>
+                                    </Dropdown>,
+                                    <Dropdown className="account-dropdown">
+                                        <DropdownTrigger>Client Links</DropdownTrigger>
+                                        <DropdownContent>
+                                            <ul>
+                                                <li>
+                                                    <a href="/profile">Profile</a>
+                                                </li>
+                                                <li>
+                                                    <a href="/favorites">Favorites</a>
+                                                </li>
+                                                <li>
+                                                    <a href="/logout">Log Out</a>
+                                                </li>
+                                            </ul>
+                                        </DropdownContent>
+                                    </Dropdown>,
                                     <button
                                         style={{
                                             verticalAlign: 'middle',
                                         }}
-                                        onClick={() => alertNodeInfo(rowInfo)}
+                                        onClick={() => this.selectNode(rowInfo)}
                                     >
                                         ℹ
-                                    </button>,
-                                    <button
-                                        style={{
-                                            verticalAlign: 'middle',
-                                        }}
-                                        onClick={() => (this.replaceChildrenIntoNode(rowInfo))}
-                                    >
-                                        Replace children
                                     </button>
                                 ],
                             })}

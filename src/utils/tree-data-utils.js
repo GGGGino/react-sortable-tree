@@ -325,11 +325,12 @@ export function walk({ treeData, getNodeKey, callback, ignoreCollapsed = true })
  * @return {Object[]} changedTreeData - The changed tree data
  */
 export function map({ treeData, getNodeKey, callback, ignoreCollapsed = true }) {
+    console.log(treeData);
     if (!treeData || treeData.length < 1) {
         return [];
     }
 
-    return mapDescendants({
+    let mapDesc = mapDescendants({
         callback,
         getNodeKey,
         ignoreCollapsed,
@@ -338,7 +339,8 @@ export function map({ treeData, getNodeKey, callback, ignoreCollapsed = true }) 
         currentIndex: -1,
         path: [],
         lowerSiblingCounts: [],
-    }).node.children;
+    });
+    return mapDesc.node.children;
 }
 
 /**
@@ -569,6 +571,67 @@ export function addNodeUnderParent({
                 ...parentNode,
                 children: [ ...parentNode.children, newNode ],
             };
+        },
+    });
+
+    if (!hasBeenAdded) {
+        throw new Error('No node found with the given key.');
+    }
+
+    return {
+        treeData: changedTreeData,
+        treeIndex: insertedTreeIndex,
+    };
+}
+
+/**
+ * Adds the node to the specified parent and returns the resulting treeData.
+ *
+ * @param {!Object[]} treeData
+ * @param {!Object} newNode - The node to insert
+ * @param {number|string} parentKey - The key of the to-be parentNode of the node
+ * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
+ * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
+ * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
+ *
+ * @return {Object} result
+ * @return {Object[]} result.treeData - The updated tree data
+ * @return {number} result.treeIndex - The tree index at which the node was inserted
+ */
+export function replaceNodeWithNew({
+    treeData,
+    newNode,
+    parentKey = null,
+    getNodeKey,
+    ignoreCollapsed = true,
+    expandParent = false,
+}) {
+    if (parentKey === null) {
+        return {
+            treeData: newNode,
+            treeIndex: (newNode || []).length,
+        };
+    }
+
+    const insertedTreeIndex = null;
+    let hasBeenAdded = false;
+    const changedTreeData = map({
+        treeData,
+        getNodeKey,
+        ignoreCollapsed,
+        callback: ({ node, path }) => {
+            const key = path ? path[path.length - 1] : null;
+            // Return nodes that are not the parent as-is
+            if (hasBeenAdded || key !== parentKey) {
+                return node;
+            }
+            hasBeenAdded = true;
+
+            if (expandParent) {
+                newNode.expanded = true;
+            }
+
+            return newNode;
         },
     });
 
