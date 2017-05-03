@@ -667,7 +667,6 @@ class App extends Component {
                         </span>
                     </footer>
                 </section>
-                </section>
 
                 <a href={githubUrl}>
                     <img

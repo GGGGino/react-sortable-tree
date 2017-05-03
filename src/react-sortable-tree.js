@@ -19,6 +19,7 @@ import {
     removeNodeAtPath,
     insertNode,
     getDescendantCount,
+    replaceNodeWithNew,
     find,
 } from './utils/tree-data-utils';
 import {
