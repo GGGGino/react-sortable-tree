@@ -350,7 +350,8 @@
 	 */
         function map(_ref8) {
             var treeData = _ref8.treeData, getNodeKey = _ref8.getNodeKey, callback = _ref8.callback, _ref8$ignoreCollapsed = _ref8.ignoreCollapsed, ignoreCollapsed = void 0 === _ref8$ignoreCollapsed || _ref8$ignoreCollapsed;
-            return !treeData || treeData.length < 1 ? [] : mapDescendants({
+            if (console.log(treeData), !treeData || treeData.length < 1) return [];
+            var mapDesc = mapDescendants({
                 callback: callback,
                 getNodeKey: getNodeKey,
                 ignoreCollapsed: ignoreCollapsed,
@@ -361,7 +362,8 @@
                 currentIndex: -1,
                 path: [],
                 lowerSiblingCounts: []
-            }).node.children;
+            });
+            return mapDesc.node.children;
         }
         /**
 	 * Expand or close every node in the tree
@@ -542,8 +544,46 @@
                 treeIndex: insertedTreeIndex
             };
         }
-        function addNodeAtDepthAndIndex(_ref19) {
-            var targetDepth = _ref19.targetDepth, minimumTreeIndex = _ref19.minimumTreeIndex, newNode = _ref19.newNode, ignoreCollapsed = _ref19.ignoreCollapsed, expandParent = _ref19.expandParent, _ref19$isPseudoRoot = _ref19.isPseudoRoot, isPseudoRoot = void 0 !== _ref19$isPseudoRoot && _ref19$isPseudoRoot, isLastChild = _ref19.isLastChild, node = _ref19.node, currentIndex = _ref19.currentIndex, currentDepth = _ref19.currentDepth, getNodeKey = _ref19.getNodeKey, _ref19$path = _ref19.path, path = void 0 === _ref19$path ? [] : _ref19$path, selfPath = function(n) {
+        /**
+	 * Adds the node to the specified parent and returns the resulting treeData.
+	 *
+	 * @param {!Object[]} treeData
+	 * @param {!Object} newNode - The node to insert
+	 * @param {number|string} parentKey - The key of the to-be parentNode of the node
+	 * @param {!function} getNodeKey - Function to get the key from the nodeData and tree index
+	 * @param {boolean=} ignoreCollapsed - Ignore children of nodes without `expanded` set to `true`
+	 * @param {boolean=} expandParent - If true, expands the parentNode specified by parentPath
+	 *
+	 * @return {Object} result
+	 * @return {Object[]} result.treeData - The updated tree data
+	 * @return {number} result.treeIndex - The tree index at which the node was inserted
+	 */
+        function replaceNodeWithNew(_ref19) {
+            var treeData = _ref19.treeData, newNode = _ref19.newNode, _ref19$parentKey = _ref19.parentKey, parentKey = void 0 === _ref19$parentKey ? null : _ref19$parentKey, getNodeKey = _ref19.getNodeKey, _ref19$ignoreCollapse = _ref19.ignoreCollapsed, ignoreCollapsed = void 0 === _ref19$ignoreCollapse || _ref19$ignoreCollapse, _ref19$expandParent = _ref19.expandParent, expandParent = void 0 !== _ref19$expandParent && _ref19$expandParent;
+            if (null === parentKey) return {
+                treeData: newNode,
+                treeIndex: (newNode || []).length
+            };
+            var insertedTreeIndex = null, hasBeenAdded = !1, changedTreeData = map({
+                treeData: treeData,
+                getNodeKey: getNodeKey,
+                ignoreCollapsed: ignoreCollapsed,
+                callback: function(_ref20) {
+                    var node = _ref20.node, path = _ref20.path, key = path ? path[path.length - 1] : null;
+                    // Return nodes that are not the parent as-is
+                    // Return nodes that are not the parent as-is
+                    return hasBeenAdded || key !== parentKey ? node : (hasBeenAdded = !0, expandParent && (newNode.expanded = !0), 
+                    newNode);
+                }
+            });
+            if (!hasBeenAdded) throw new Error("No node found with the given key.");
+            return {
+                treeData: changedTreeData,
+                treeIndex: insertedTreeIndex
+            };
+        }
+        function addNodeAtDepthAndIndex(_ref21) {
+            var targetDepth = _ref21.targetDepth, minimumTreeIndex = _ref21.minimumTreeIndex, newNode = _ref21.newNode, ignoreCollapsed = _ref21.ignoreCollapsed, expandParent = _ref21.expandParent, _ref21$isPseudoRoot = _ref21.isPseudoRoot, isPseudoRoot = void 0 !== _ref21$isPseudoRoot && _ref21$isPseudoRoot, isLastChild = _ref21.isLastChild, node = _ref21.node, currentIndex = _ref21.currentIndex, currentDepth = _ref21.currentDepth, getNodeKey = _ref21.getNodeKey, _ref21$path = _ref21.path, path = void 0 === _ref21$path ? [] : _ref21$path, selfPath = function(n) {
                 return isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [ getNodeKey({
                     node: n,
                     treeIndex: currentIndex
@@ -663,8 +703,8 @@
 	 * @return {number[]|string[]} result.path - Array of keys leading to the node location after insertion
 	 * @return {Object} result.parentNode - The parent node of the inserted node
 	 */
-        function insertNode(_ref20) {
-            var treeData = _ref20.treeData, targetDepth = _ref20.depth, minimumTreeIndex = _ref20.minimumTreeIndex, newNode = _ref20.newNode, _ref20$getNodeKey = _ref20.getNodeKey, getNodeKey = void 0 === _ref20$getNodeKey ? function() {} : _ref20$getNodeKey, _ref20$ignoreCollapse = _ref20.ignoreCollapsed, ignoreCollapsed = void 0 === _ref20$ignoreCollapse || _ref20$ignoreCollapse, _ref20$expandParent = _ref20.expandParent, expandParent = void 0 !== _ref20$expandParent && _ref20$expandParent;
+        function insertNode(_ref22) {
+            var treeData = _ref22.treeData, targetDepth = _ref22.depth, minimumTreeIndex = _ref22.minimumTreeIndex, newNode = _ref22.newNode, _ref22$getNodeKey = _ref22.getNodeKey, getNodeKey = void 0 === _ref22$getNodeKey ? function() {} : _ref22$getNodeKey, _ref22$ignoreCollapse = _ref22.ignoreCollapsed, ignoreCollapsed = void 0 === _ref22$ignoreCollapse || _ref22$ignoreCollapse, _ref22$expandParent = _ref22.expandParent, expandParent = void 0 !== _ref22$expandParent && _ref22$expandParent;
             if (!treeData && 0 === targetDepth) return {
                 treeData: [ newNode ],
                 treeIndex: 0,
@@ -714,8 +754,8 @@
 	 *      lowerSiblingCounts: []number
 	 *  }}[] nodes - The node array
 	 */
-        function getFlatDataFromTree(_ref21) {
-            var treeData = _ref21.treeData, getNodeKey = _ref21.getNodeKey, _ref21$ignoreCollapse = _ref21.ignoreCollapsed, ignoreCollapsed = void 0 === _ref21$ignoreCollapse || _ref21$ignoreCollapse;
+        function getFlatDataFromTree(_ref23) {
+            var treeData = _ref23.treeData, getNodeKey = _ref23.getNodeKey, _ref23$ignoreCollapse = _ref23.ignoreCollapsed, ignoreCollapsed = void 0 === _ref23$ignoreCollapse || _ref23$ignoreCollapse;
             if (!treeData || treeData.length < 1) return [];
             var flattened = [];
             return walk({
@@ -738,12 +778,12 @@
 	 *
 	 * @return {Object[]} treeData - The flat data represented as a tree
 	 */
-        function getTreeFromFlatData(_ref22) {
-            var flatData = _ref22.flatData, _ref22$getKey = _ref22.getKey, getKey = void 0 === _ref22$getKey ? function(node) {
+        function getTreeFromFlatData(_ref24) {
+            var flatData = _ref24.flatData, _ref24$getKey = _ref24.getKey, getKey = void 0 === _ref24$getKey ? function(node) {
                 return node.id;
-            } : _ref22$getKey, _ref22$getParentKey = _ref22.getParentKey, getParentKey = void 0 === _ref22$getParentKey ? function(node) {
+            } : _ref24$getKey, _ref24$getParentKey = _ref24.getParentKey, getParentKey = void 0 === _ref24$getParentKey ? function(node) {
                 return node.parentId;
-            } : _ref22$getParentKey, _ref22$rootKey = _ref22.rootKey, rootKey = void 0 === _ref22$rootKey ? "0" : _ref22$rootKey;
+            } : _ref24$getParentKey, _ref24$rootKey = _ref24.rootKey, rootKey = void 0 === _ref24$rootKey ? "0" : _ref24$rootKey;
             if (!flatData) return [];
             var childrenToParents = {};
             if (flatData.forEach(function(child) {
@@ -806,9 +846,9 @@
 	 *                               If expandAllMatchPaths and expandFocusMatchPaths are both false,
 	 *                               it will be the same as the original tree data.
 	 */
-        function find(_ref23) {
-            var getNodeKey = _ref23.getNodeKey, treeData = _ref23.treeData, searchQuery = _ref23.searchQuery, searchMethod = _ref23.searchMethod, searchFocusOffset = _ref23.searchFocusOffset, _ref23$expandAllMatch = _ref23.expandAllMatchPaths, expandAllMatchPaths = void 0 !== _ref23$expandAllMatch && _ref23$expandAllMatch, _ref23$expandFocusMat = _ref23.expandFocusMatchPaths, expandFocusMatchPaths = void 0 === _ref23$expandFocusMat || _ref23$expandFocusMat, matchCount = 0, trav = function trav(_ref24) {
-                var _ref24$isPseudoRoot = _ref24.isPseudoRoot, isPseudoRoot = void 0 !== _ref24$isPseudoRoot && _ref24$isPseudoRoot, node = _ref24.node, currentIndex = _ref24.currentIndex, _ref24$path = _ref24.path, path = void 0 === _ref24$path ? [] : _ref24$path, matches = [], isSelfMatch = !1, hasFocusMatch = !1, selfPath = isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [ getNodeKey({
+        function find(_ref25) {
+            var getNodeKey = _ref25.getNodeKey, treeData = _ref25.treeData, searchQuery = _ref25.searchQuery, searchMethod = _ref25.searchMethod, searchFocusOffset = _ref25.searchFocusOffset, _ref25$expandAllMatch = _ref25.expandAllMatchPaths, expandAllMatchPaths = void 0 !== _ref25$expandAllMatch && _ref25$expandAllMatch, _ref25$expandFocusMat = _ref25.expandFocusMatchPaths, expandFocusMatchPaths = void 0 === _ref25$expandFocusMat || _ref25$expandFocusMat, matchCount = 0, trav = function trav(_ref26) {
+                var _ref26$isPseudoRoot = _ref26.isPseudoRoot, isPseudoRoot = void 0 !== _ref26$isPseudoRoot && _ref26$isPseudoRoot, node = _ref26.node, currentIndex = _ref26.currentIndex, _ref26$path = _ref26.path, path = void 0 === _ref26$path ? [] : _ref26$path, matches = [], isSelfMatch = !1, hasFocusMatch = !1, selfPath = isPseudoRoot ? [] : [].concat(_toConsumableArray(path), [ getNodeKey({
                     node: node,
                     treeIndex: currentIndex
                 }) ]), extraInfo = isPseudoRoot ? null : {
@@ -886,9 +926,10 @@
         exports.getVisibleNodeInfoAtIndex = getVisibleNodeInfoAtIndex, exports.walk = walk, 
         exports.map = map, exports.toggleExpandedForAll = toggleExpandedForAll, exports.changeNodeAtPath = changeNodeAtPath, 
         exports.removeNodeAtPath = removeNodeAtPath, exports.getNodeAtPath = getNodeAtPath, 
-        exports.addNodeUnderParent = addNodeUnderParent, exports.insertNode = insertNode, 
-        exports.getFlatDataFromTree = getFlatDataFromTree, exports.getTreeFromFlatData = getTreeFromFlatData, 
-        exports.isDescendant = isDescendant, exports.getDepth = getDepth, exports.find = find;
+        exports.addNodeUnderParent = addNodeUnderParent, exports.replaceNodeWithNew = replaceNodeWithNew, 
+        exports.insertNode = insertNode, exports.getFlatDataFromTree = getFlatDataFromTree, 
+        exports.getTreeFromFlatData = getTreeFromFlatData, exports.isDescendant = isDescendant, 
+        exports.getDepth = getDepth, exports.find = find;
     }, /* 2 */
     /***/
     function(module, exports) {
