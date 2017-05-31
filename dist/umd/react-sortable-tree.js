@@ -350,7 +350,7 @@
 	 */
         function map(_ref8) {
             var treeData = _ref8.treeData, getNodeKey = _ref8.getNodeKey, callback = _ref8.callback, _ref8$ignoreCollapsed = _ref8.ignoreCollapsed, ignoreCollapsed = void 0 === _ref8$ignoreCollapsed || _ref8$ignoreCollapsed;
-            if (console.log(treeData), !treeData || treeData.length < 1) return [];
+            if (!treeData || treeData.length < 1) return [];
             var mapDesc = mapDescendants({
                 callback: callback,
                 getNodeKey: getNodeKey,
@@ -1567,9 +1567,9 @@
             }, {
                 key: "dragHover",
                 value: function(_ref5) {
-                    var draggedNode = _ref5.node, depth = _ref5.depth, minimumTreeIndex = _ref5.minimumTreeIndex, addedResult = (0, 
+                    var draggedNode = _ref5.node, depth = _ref5.depth, minimumTreeIndex = _ref5.minimumTreeIndex, draggingTreeData = this.state.draggingTreeData || this.props.treeData, addedResult = (0, 
                     _memoizedTreeDataUtils.memoizedInsertNode)({
-                        treeData: this.state.draggingTreeData,
+                        treeData: draggingTreeData,
                         newNode: draggedNode,
                         depth: depth,
                         minimumTreeIndex: minimumTreeIndex,
@@ -1585,7 +1585,7 @@
                         swapLength: swapLength,
                         swapDepth: depth,
                         draggingTreeData: (0, _treeDataUtils.changeNodeAtPath)({
-                            treeData: this.state.draggingTreeData,
+                            treeData: draggingTreeData,
                             path: expandedParentPath.slice(0, -1),
                             newNode: function(_ref6) {
                                 var node = _ref6.node;
@@ -2186,7 +2186,7 @@
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
         // module
-        exports.push([ module.id, ".rst__tree{/*! This comment keeps Sass from deleting the empty rule */}.rst__virtualScrollOverride *{box-sizing:border-box}.ReactVirtualized__Grid__innerScrollContainer{overflow:visible!important}.ReactVirtualized__Grid{outline:none}", "" ]), 
+        exports.push([ module.id, ".rst__tree{/*! This comment keeps Sass from deleting the empty rule */}.rst__virtualScrollOverride{overflow:auto!important}.rst__virtualScrollOverride *{box-sizing:border-box}.ReactVirtualized__Grid__innerScrollContainer{overflow:visible!important}.ReactVirtualized__Grid{outline:none}", "" ]), 
         // exports
         exports.locals = {
             tree: "rst__tree",
@@ -2197,7 +2197,7 @@
     function(module, exports, __webpack_require__) {
         exports = module.exports = __webpack_require__(2)(), // imports
         // module
-        exports.push([ module.id, '.rst__node{min-width:100%;white-space:nowrap;position:relative}.rst__nodeContent{position:absolute;top:0;bottom:0}.rst__absoluteLineBlock,.rst__lineBlock{height:100%;position:relative;display:inline-block}.rst__absoluteLineBlock{position:absolute;top:0}.rst__lineFullVertical:after,.rst__lineHalfHorizontalRight:before,.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{position:absolute;content:"";background-color:#000}.rst__lineHalfHorizontalRight:before{height:1px;top:50%;right:0;width:50%}.rst__lineFullVertical:after,.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{width:1px;left:50%;top:0;height:100%}.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{top:0;height:50%}.rst__lineHalfVerticalBottom:after{top:auto;bottom:0}.rst__highlightLineVertical{z-index:3}.rst__highlightLineVertical:before{position:absolute;content:"";background-color:#36c2f6;width:8px;margin-left:-4px;left:50%;top:0;height:100%}@-webkit-keyframes rst__arrow-pulse{0%{-webkit-transform:translate(0);transform:translate(0);opacity:0}30%{-webkit-transform:translateY(300%);transform:translateY(300%);opacity:1}70%{-webkit-transform:translateY(700%);transform:translateY(700%);opacity:1}to{-webkit-transform:translateY(1000%);transform:translateY(1000%);opacity:0}}@keyframes rst__arrow-pulse{0%{-webkit-transform:translate(0);transform:translate(0);opacity:0}30%{-webkit-transform:translateY(300%);transform:translateY(300%);opacity:1}70%{-webkit-transform:translateY(700%);transform:translateY(700%);opacity:1}to{-webkit-transform:translateY(1000%);transform:translateY(1000%);opacity:0}}.rst__highlightLineVertical:after{content:"";position:absolute;height:0;margin-left:-4px;left:50%;top:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #fff;-webkit-animation:rst__arrow-pulse 1s infinite linear both;animation:rst__arrow-pulse 1s infinite linear both}.rst__highlightTopLeftCorner:before{z-index:3;content:"";position:absolute;border-top:8px solid #36c2f6;border-left:8px solid #36c2f6;box-sizing:border-box;height:calc(50% + 4px);top:50%;margin-top:-4px;right:0;width:calc(50% + 4px)}.rst__highlightBottomLeftCorner{z-index:3}.rst__highlightBottomLeftCorner:before{content:"";position:absolute;border-bottom:8px solid #36c2f6;border-left:8px solid #36c2f6;box-sizing:border-box;height:calc(100% + 4px);top:0;right:12px;width:calc(50% - 8px)}.rst__highlightBottomLeftCorner:after{content:"";position:absolute;height:0;right:0;top:100%;margin-top:-12px;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:12px solid #36c2f6}', "" ]), 
+        exports.push([ module.id, '.rst__node{min-width:100%;white-space:nowrap;position:relative;text-align:left}.rst__nodeContent{position:absolute;top:0;bottom:0}.rst__absoluteLineBlock,.rst__lineBlock{height:100%;position:relative;display:inline-block}.rst__absoluteLineBlock{position:absolute;top:0}.rst__lineFullVertical:after,.rst__lineHalfHorizontalRight:before,.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{position:absolute;content:"";background-color:#000}.rst__lineHalfHorizontalRight:before{height:1px;top:50%;right:0;width:50%}.rst__lineFullVertical:after,.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{width:1px;left:50%;top:0;height:100%}.rst__lineHalfVerticalBottom:after,.rst__lineHalfVerticalTop:after{top:0;height:50%}.rst__lineHalfVerticalBottom:after{top:auto;bottom:0}.rst__highlightLineVertical{z-index:3}.rst__highlightLineVertical:before{position:absolute;content:"";background-color:#36c2f6;width:8px;margin-left:-4px;left:50%;top:0;height:100%}@-webkit-keyframes rst__arrow-pulse{0%{-webkit-transform:translate(0);transform:translate(0);opacity:0}30%{-webkit-transform:translateY(300%);transform:translateY(300%);opacity:1}70%{-webkit-transform:translateY(700%);transform:translateY(700%);opacity:1}to{-webkit-transform:translateY(1000%);transform:translateY(1000%);opacity:0}}@keyframes rst__arrow-pulse{0%{-webkit-transform:translate(0);transform:translate(0);opacity:0}30%{-webkit-transform:translateY(300%);transform:translateY(300%);opacity:1}70%{-webkit-transform:translateY(700%);transform:translateY(700%);opacity:1}to{-webkit-transform:translateY(1000%);transform:translateY(1000%);opacity:0}}.rst__highlightLineVertical:after{content:"";position:absolute;height:0;margin-left:-4px;left:50%;top:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #fff;-webkit-animation:rst__arrow-pulse 1s infinite linear both;animation:rst__arrow-pulse 1s infinite linear both}.rst__highlightTopLeftCorner:before{z-index:3;content:"";position:absolute;border-top:8px solid #36c2f6;border-left:8px solid #36c2f6;box-sizing:border-box;height:calc(50% + 4px);top:50%;margin-top:-4px;right:0;width:calc(50% + 4px)}.rst__highlightBottomLeftCorner{z-index:3}.rst__highlightBottomLeftCorner:before{content:"";position:absolute;border-bottom:8px solid #36c2f6;border-left:8px solid #36c2f6;box-sizing:border-box;height:calc(100% + 4px);top:0;right:12px;width:calc(50% - 8px)}.rst__highlightBottomLeftCorner:after{content:"";position:absolute;height:0;right:0;top:100%;margin-top:-12px;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:12px solid #36c2f6}', "" ]), 
         // exports
         exports.locals = {
             node: "rst__node",

@@ -325,7 +325,6 @@ export function walk({ treeData, getNodeKey, callback, ignoreCollapsed = true })
  * @return {Object[]} changedTreeData - The changed tree data
  */
 export function map({ treeData, getNodeKey, callback, ignoreCollapsed = true }) {
-    console.log(treeData);
     if (!treeData || treeData.length < 1) {
         return [];
     }
