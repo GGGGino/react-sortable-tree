@@ -238,8 +238,12 @@ class ReactSortableTree extends Component {
     }
 
     dragHover({ node: draggedNode, depth, minimumTreeIndex }) {
+        // Fall back to the tree data if something is being dragged in from
+        //  an external element
+        const draggingTreeData = this.state.draggingTreeData || this.props.treeData;
+
         const addedResult = memoizedInsertNode({
-            treeData: this.state.draggingTreeData,
+            treeData: draggingTreeData,
             newNode: draggedNode,
             depth,
             minimumTreeIndex,
@@ -259,7 +263,7 @@ class ReactSortableTree extends Component {
             swapLength,
             swapDepth: depth,
             draggingTreeData: changeNodeAtPath({
-                treeData: this.state.draggingTreeData,
+                treeData: draggingTreeData,
                 path: expandedParentPath.slice(0, -1),
                 newNode: ({ node }) => ({ ...node, expanded: true }),
                 getNodeKey: this.props.getNodeKey,
